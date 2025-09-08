@@ -1,4 +1,4 @@
-package com.kavencore.MoneyHarbor;
+package com.kavencore.moneyharbor;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

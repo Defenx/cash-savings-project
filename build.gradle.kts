@@ -17,6 +17,7 @@ dependencies {
 	// Импорт BOM (даёт версии всем spring-boot-* и их транзитивным)
 	implementation(platform(libs.spring.boot.bom))
 	annotationProcessor(platform(libs.spring.boot.bom))
+	developmentOnly(platform(libs.spring.boot.bom))
 
 	// Стартеры
 	implementation(libs.spring.boot.starter.web)
