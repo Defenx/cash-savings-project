@@ -1,0 +1,180 @@
+openapi: 3.0.3
+info:
+  title: MoneyHarbor — Accounts API
+  version: 1.0.0
+  description: |
+    API для работы со счетами.
+    Правило: если при создании передан `title: null`, сервер генерирует строку `"{currency}_счет"`.
+servers:
+  - url: http://localhost:8080
+tags:
+  - name: Accounts
+
+paths:
+  /accounts:
+    post:
+      tags: [Accounts]
+      summary: Create account
+      description: |
+        Создаёт счёт. `title` необязателен; если `null`, сервер сгенерирует `"{currency}_счет"`.
+        При невалидном JSON (ошибка десериализации) — 400.
+      operationId: createAccount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateAccountRequest' }
+            examples:
+              okWithoutTitle:
+                summary: Без title (будет сгенерирован)
+                value: { currency: "RUB", amount: 1500.50 }
+              okWithTitle:
+                summary: С указанным title
+                value: { title: "Зарплатный", currency: "USD", amount: 0 }
+      responses:
+        '201':
+          description: Created
+          headers:
+            Location:
+              description: URL созданного ресурса
+              schema: { type: string, format: uri }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccountResponse' }
+        '400':
+          description: Bad Request (RFC 9457 Problem Details)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
+
+  /accounts/{id}:
+    get:
+      tags: [Accounts]
+      summary: Get account by id
+      operationId: getAccountById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccountResponse' }
+        '400':
+          description: Bad Request (invalid UUID) — RFC 9457 Problem Details
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
+        '404':
+          description: Not Found — RFC 9457 Problem Details
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
+
+    delete:
+      tags: [Accounts]
+      summary: Delete account
+      operationId: deleteAccount
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204':
+          description: No Content — запись существовала и была удалена
+        '200':
+          description: OK — записи не было (идемпотентно)
+        '400':
+          description: Bad Request (invalid UUID) — RFC 9457 Problem Details
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
+
+components:
+  schemas:
+    Currency:
+      type: string
+      description: Код валюты по ISO 4217.
+      enum: [BYN, RUB, USD]
+      x-enum-descriptions:
+        - "Белорусский рубль"
+        - "Российский рубль"
+        - "Доллар США"
+      example: RUB
+
+    CreateAccountRequest:
+      type: object
+      required: [currency]
+      properties:
+        title:
+          type: string
+          nullable: true
+          maxLength: 100
+          description: Если null — сервер сгенерирует "{currency}_счет".
+          example: null
+        currency:
+          $ref: '#/components/schemas/Currency'
+        amount:
+          type: number
+          x-java-type: java.math.BigDecimal
+          description: Денежная сумма; соответствует NUMERIC(19,2).
+          example: 0
+          multipleOf: 0.01
+          maximum: 100000000000000000
+          exclusiveMaximum: true
+          minimum: -100000000000000000
+          exclusiveMinimum: true
+          x-field-extra-annotation: |
+            @Digits(integer = 17, fraction = 2)
+      example:
+        title: null
+        currency: RUB
+        amount: 0
+
+    AccountResponse:
+      type: object
+      required: [title, currency, amount]
+      properties:
+        title:
+          type: string
+          maxLength: 100
+        currency:
+          $ref: '#/components/schemas/Currency'
+        amount:
+          type: number
+          x-java-type: java.math.BigDecimal
+          description: Денежная сумма; соответствует NUMERIC(19,2).
+          example: 1500.50
+
+    ProblemDetails:
+      type: object
+      description: RFC 9457 Problem Details object
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI-идентификатор типа проблемы (или "about:blank")
+          example: about:blank
+        title:
+          type: string
+          description: Краткий заголовок проблемы
+          example: Bad Request
+        status:
+          type: integer
+          format: int32
+          description: HTTP-статус для этой ошибки
+          example: 400
+        detail:
+          type: string
+          description: Человеко-читаемое пояснение
+          example: Invalid value in request body
+        instance:
+          type: string
+          format: uri
+          description: URI конкретного случая (обычно путь запроса)
+          example: /accounts/00000000-0000-0000-0000-000000000000
+      additionalProperties: true

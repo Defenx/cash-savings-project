@@ -1,4 +1,7 @@
 spring:
+  liquibase:
+    enabled: true
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
   docker:
     compose:
       enabled: true
@@ -25,4 +28,11 @@ server:
 
 logging:
   level:
+    root: INFO
     org.springframework: INFO
+
+springdoc:
+  swagger-ui:
+    urls:
+      - name: MoneyHarbor API
+        url: /swagger/openapi.yaml

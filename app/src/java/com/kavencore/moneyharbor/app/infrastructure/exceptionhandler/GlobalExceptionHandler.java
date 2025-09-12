@@ -1,0 +1,100 @@
+package com.kavencore.moneyharbor.app.infrastructure.exceptionhandler;
+
+import com.kavencore.moneyharbor.app.infrastructure.exception.AccountNotFoundException;
+import com.kavencore.moneyharbor.app.infrastructure.logging.HttpErrorLogger;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.ErrorResponseException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+
+import java.net.URI;
+import java.util.List;
+
+@RestControllerAdvice
+@RequiredArgsConstructor
+public class GlobalExceptionHandler {
+
+    private final HttpErrorLogger errorLogger;
+
+
+    @ExceptionHandler(AccountNotFoundException.class)
+    public ResponseEntity<ProblemDetail> handleNotFound(AccountNotFoundException ex, HttpServletRequest req) {
+        ProblemDetail pd = getProblemDetail(req, HttpStatus.NOT_FOUND);
+        pd.setDetail(ex.getMessage());
+        errorLogger.logClientError(req, HttpStatus.NOT_FOUND.value(), ex, null);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(pd);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ProblemDetail> handleTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest req) {
+        ProblemDetail pd = getProblemDetail(req, HttpStatus.BAD_REQUEST);
+        pd.setDetail("Invalid UUID in path parameter 'id'");
+        errorLogger.logClientError(req, HttpStatus.BAD_REQUEST.value(), ex, null);
+        return ResponseEntity.badRequest().body(pd);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ProblemDetail> handleBadJson(HttpMessageNotReadableException ex, HttpServletRequest req) {
+        ProblemDetail pd = getProblemDetail(req, HttpStatus.BAD_REQUEST);
+        pd.setDetail("Invalid value in request body");
+        errorLogger.logClientError(req, HttpStatus.BAD_REQUEST.value(), ex, null);
+        return ResponseEntity.badRequest().body(pd);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ProblemDetail> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest req) {
+        ProblemDetail pd = getProblemDetail(req, HttpStatus.BAD_REQUEST);
+        List<String> errors = ex.getBindingResult().getFieldErrors().stream()
+                .map(fe -> String.format("%s: %s", fe.getField(), fe.getDefaultMessage()))
+                .toList();
+        pd.setProperty("errors", errors);
+        errorLogger.logClientError(req, HttpStatus.BAD_REQUEST.value(), ex, "fieldErrors=" + firstOrNull(errors));
+        return ResponseEntity.badRequest().body(pd);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ProblemDetail> handleConstraint(ConstraintViolationException ex, HttpServletRequest req) {
+        ProblemDetail pd = getProblemDetail(req, HttpStatus.BAD_REQUEST);
+        pd.setDetail("Validation failed");
+        List<String> errors = ex.getConstraintViolations().stream()
+                .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                .toList();
+        pd.setProperty("errors", errors);
+        errorLogger.logClientError(req, HttpStatus.BAD_REQUEST.value(), ex, "violations=" + firstOrNull(errors));
+        return ResponseEntity.badRequest().body(pd);
+    }
+
+    @ExceptionHandler(ErrorResponseException.class)
+    public ResponseEntity<ProblemDetail> handleErrorResponse(ErrorResponseException ex, HttpServletRequest req) {
+        ProblemDetail pd = ex.getBody();
+        if (pd.getInstance() == null) {
+            pd.setInstance(URI.create(req.getRequestURI()));
+        }
+        int status = ex.getStatusCode().value();
+        if (ex.getStatusCode().is4xxClientError()) {
+            errorLogger.logClientError(req, status, ex, null);
+        } else {
+            errorLogger.logServerError(req, status, ex, null);
+        }
+        return ResponseEntity.status(ex.getStatusCode()).body(pd);
+    }
+
+    private ProblemDetail getProblemDetail(HttpServletRequest req, HttpStatus status) {
+        ProblemDetail pd = ProblemDetail.forStatus(status);
+        pd.setTitle(status.getReasonPhrase());
+        pd.setInstance(URI.create(req.getRequestURI()));
+        return pd;
+    }
+
+    private String firstOrNull(List<String> list) {
+        return (list == null || list.isEmpty()) ? null : list.getFirst();
+    }
+}
