@@ -1,0 +1,38 @@
+spring:
+  liquibase:
+    enabled: true
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+  docker:
+    compose:
+      enabled: true
+      lifecycle-management: start_and_stop
+  application:
+    name: money-harbor
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/moneyharbor
+    username: postgres
+    password: postgres
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: INFO
+    org.springframework: INFO
+
+springdoc:
+  swagger-ui:
+    urls:
+      - name: MoneyHarbor API
+        url: /swagger/openapi.yaml

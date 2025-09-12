@@ -19,6 +19,7 @@ spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-star
 spring-boot-starter-validation = { module = "org.springframework.boot:spring-boot-starter-validation" }
 spring-boot-configuration-processor = { module = "org.springframework.boot:spring-boot-configuration-processor" }
 spring-boot-starter-webmvc-ui = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui",version.ref = "springdoc" }
+swagger-annotations = { module = "io.swagger.core.v3:swagger-annotations", version = "2.2.22" }
 spring-boot-testcontainers = { module = "org.springframework.boot:spring-boot-testcontainers" }
 
 commons-compress = { module = "org.apache.commons:commons-compress", version = "1.28.0" }
