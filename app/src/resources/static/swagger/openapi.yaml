@@ -9,6 +9,11 @@ servers:
   - url: http://localhost:8080
 tags:
   - name: Accounts
+  - name: User
+    description: Регистрация и аутентификация
+
+security:
+  - BasicAuth: [ ]
 
 paths:
   /accounts:
@@ -46,6 +51,8 @@ paths:
           content:
             application/problem+json:
               schema: { $ref: '#/components/schemas/ProblemDetails' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
 
   /accounts/{id}:
     get:
@@ -73,6 +80,8 @@ paths:
           content:
             application/problem+json:
               schema: { $ref: '#/components/schemas/ProblemDetails' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
 
     delete:
       tags: [Accounts]
@@ -93,8 +102,96 @@ paths:
           content:
             application/problem+json:
               schema: { $ref: '#/components/schemas/ProblemDetails' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /user/sign-up:
+    post:
+      tags: [ User ]
+      summary: Регистрация пользователя
+      description: Создаёт нового пользователя с ролью USER. Эндпоинт публичный.
+      security: [ ]  # переопределяем глобальную защиту: Basic Auth здесь не требуется
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserSignUpRequest' }
+            examples:
+              ok:
+                value: { email: "alice@example.com", password: "Abcdefg1" }
+              bad:
+                value: { email: "not-an-email", password: "vvvvalera123" }
+      responses:
+        '201':
+          description: Пользователь зарегистрирован
+          headers:
+            Location:
+              description: URI созданного пользователя
+              schema: { type: string, format: uri }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserResponse' }
+              examples:
+                created:
+                  value:
+                    id: "3f5b4e7a-2c1e-4b7a-9432-6a0b7a5b9e10"
+                    email: "alice@example.com"
+        '400':
+          description: Ошибка валидации
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
+              examples:
+                validation:
+                  value:
+                    type: "about:blank"
+                    title: "Invalid request"
+                    status: 400
+                    detail: "password: must be >= 8 chars, include a digit, and have no 3+ repeating chars; email: must be a valid email"
+        '409':
+          description: Пользователь с таким email уже существует
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
+              examples:
+                conflict:
+                  value:
+                    type: "about:blank"
+                    title: "Conflict"
+                    status: 409
+                    detail: "Email already registered: alice@example.com"
 
 components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+
+  responses:
+    Unauthorized:
+      description: Unauthorized — требуется аутентификация
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
+          examples:
+            unauthorized:
+              value:
+                type: "about:blank"
+                title: "Unauthorized"
+                status: 401
+                detail: "Missing or invalid Authorization header"
+    Forbidden:
+      description: Forbidden — недостаточно прав
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
+          examples:
+            forbidden:
+              value:
+                type: "about:blank"
+                title: "Forbidden"
+                status: 403
+                detail: "Access is denied"
   schemas:
     Currency:
       type: string
@@ -178,3 +275,37 @@ components:
           description: URI конкретного случая (обычно путь запроса)
           example: /accounts/00000000-0000-0000-0000-000000000000
       additionalProperties: true
+    UserSignUpRequest:
+      type: object
+      required: [ email, password ]
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          description: Логин в формате email
+          x-field-extra-annotation: |
+            @jakarta.validation.constraints.NotBlank
+            @jakarta.validation.constraints.Email
+        password:
+          type: string
+          minLength: 8
+          description: |
+            Пароль: ≥ 8 символов, ≥ 1 цифра, без трёх подряд одинаковых символов.
+            Проверка шаблоном: ^(?=.*\d)(?!.*(.)\1\1).{8,}$
+          pattern: '^(?=.*\d)(?!.*(.)\1\1).{8,}$'
+          x-field-extra-annotation: |
+            @jakarta.validation.constraints.NotBlank
+            @com.kavencore.moneyharbor.app.validation.StrongPassword
+          example: Abcdefg1
+
+    UserResponse:
+      type: object
+      required: [ id, email ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
