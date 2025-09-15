@@ -110,7 +110,7 @@ paths:
       tags: [ User ]
       summary: Регистрация пользователя
       description: Создаёт нового пользователя с ролью USER. Эндпоинт публичный.
-      security: [ ]  # переопределяем глобальную защиту: Basic Auth здесь не требуется
+      security: [ ]
       requestBody:
         required: true
         content:
@@ -147,7 +147,7 @@ paths:
                     type: "about:blank"
                     title: "Invalid request"
                     status: 400
-                    detail: "password: must be >= 8 chars, include a digit, and have no 3+ repeating chars; email: must be a valid email"
+                    detail: "password: must match ^(?=.*\\d)(?!.*(.)\\1{2}).{8,}$; email: must be a valid email"
         '409':
           description: Пользователь с таким email уже существует
           content:
@@ -286,13 +286,14 @@ components:
           description: Логин в формате email
         password:
           type: string
+          format: password
           minLength: 8
-          description: |
-            Пароль: ≥ 8 символов, ≥ 1 цифра, без трёх подряд одинаковых символов.
-            Проверка шаблоном: ^(?=.*\d)(?!.*(.)\1\1).{8,}$
-          pattern: '^(?=.*\d)(?!.*(.)\1\1).{8,}$'
-          x-field-extra-annotation: "@com.kavencore.moneyharbor.app.validation.StrongPassword"
+          description: >
+            Пароль: длина ≥ 8, хотя бы одна цифра, без трёх одинаковых символов подряд
+            символов (например, "vvv" запрещено).
+          pattern: '^(?=.*\d)(?!.*(.)\1{2}).{8,}$'
           example: Abcdefg1
+          x-pattern-message: 'Пароль: ≥ 8, хотя бы одна цифра, без трёх одинаковых символов подряд'
 
     UserResponse:
       type: object

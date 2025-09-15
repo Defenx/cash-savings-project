@@ -5,6 +5,8 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.proxy.HibernateProxy;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -17,7 +19,7 @@ import java.util.*;
 @AllArgsConstructor
 @ToString(onlyExplicitlyIncluded = true)
 @Table(name = "users")
-public class User {
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -104,4 +106,15 @@ public class User {
                 ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode()
                 : getClass().hashCode();
     }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return roles;
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
 }

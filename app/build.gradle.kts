@@ -63,7 +63,7 @@ dependencies {
 
 }
 
-val generatedRoot = layout.buildDirectory.dir("generated/accounts")
+val generatedRoot = layout.buildDirectory.dir("generated/")
 
 openApiGenerate {
     generatorName.set("spring")

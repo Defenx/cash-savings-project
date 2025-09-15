@@ -26,7 +26,7 @@ public class ProblemAuthEntryPoint implements AuthenticationEntryPoint {
         ProblemDetail pd = pdFactory.build(req, status, "Authentication required");
         res.setStatus(status.value());
         res.setContentType("application/problem+json");
-        res.addHeader(HttpHeaders.WWW_AUTHENTICATE, "Basic realm=\"api\"");
+        res.addHeader(HttpHeaders.WWW_AUTHENTICATE, "Basic realm=\"MoneyHarbor API\"");
         om.writeValue(res.getOutputStream(), pd);
     }
 }

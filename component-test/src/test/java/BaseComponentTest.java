@@ -39,7 +39,7 @@ public abstract class BaseComponentTest {
     protected RoleRepository roleRepository;
 
     protected static final String TEST_EMAIL = "test.user@example.com";
-    protected static final String TEST_PASSWORD = "Passw0rd1";
+    protected static final String TEST_PASSWORD = "Abcdefg1";
     protected UUID testUserId;
 
 
