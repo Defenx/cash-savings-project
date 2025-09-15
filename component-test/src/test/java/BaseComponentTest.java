@@ -16,14 +16,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.UUID;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 
-@Testcontainers
 @SpringBootTest(classes = MoneyHarborApplication.class)
 @AutoConfigureMockMvc
 public abstract class BaseComponentTest {
@@ -59,7 +56,6 @@ public abstract class BaseComponentTest {
         }
     }
 
-    @Container
     @ServiceConnection
     static final PostgreSQLContainer<?> PG =
             new PostgreSQLContainer<>("postgres:16-alpine")
