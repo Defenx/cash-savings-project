@@ -3,6 +3,7 @@ package com.kavencore.moneyharbor.app.infrastructure.service;
 import com.kavencore.moneyharbor.app.api.model.UserSignUpRequestDto;
 import com.kavencore.moneyharbor.app.api.v1.dto.SignUpResult;
 import com.kavencore.moneyharbor.app.entity.Role;
+import com.kavencore.moneyharbor.app.entity.RoleName;
 import com.kavencore.moneyharbor.app.entity.User;
 import com.kavencore.moneyharbor.app.infrastructure.exception.EmailTakenException;
 import com.kavencore.moneyharbor.app.infrastructure.exception.MissingRoleException;
@@ -56,7 +57,7 @@ public class UserService {
     }
 
     private Role roleUser() {
-        return roleRepository.findByName("USER")
-                .orElseThrow(() -> new MissingRoleException("USER"));
+        return roleRepository.findByRoleName(RoleName.USER)
+                .orElseThrow(() -> new MissingRoleException(RoleName.USER.name()));
     }
 }

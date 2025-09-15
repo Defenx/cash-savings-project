@@ -24,8 +24,9 @@ public class Role {
     @ToString.Include
     private UUID id;
 
+    @Enumerated(EnumType.STRING)
     @ToString.Include
-    private String name;
+    private RoleName roleName;
 
     @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
     @Builder.Default

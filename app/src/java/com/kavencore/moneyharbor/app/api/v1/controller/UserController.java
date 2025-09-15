@@ -15,13 +15,17 @@ import java.net.URI;
 @RequiredArgsConstructor
 public class UserController implements UserApi {
 
+
+    public static final String USER_PATH = "/user";
+    public static final String USER_PATH_WITH_SLASH = USER_PATH + "/";
+    public static final String SIGN_UP_PATH = "/user/sign-up";
     private final UserService userService;
 
     @Override
     public ResponseEntity<UserResponseDto> userSignUpPost(UserSignUpRequestDto req) {
         SignUpResult result = userService.signUp(req);
         UserResponseDto body = new UserResponseDto().id(result.id()).email(result.email());
-        URI location = URI.create("/user/" + result.id());
+        URI location = URI.create(USER_PATH_WITH_SLASH + result.id());
 
         return ResponseEntity.created(location).body(body);
     }

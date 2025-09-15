@@ -284,9 +284,6 @@ components:
           format: email
           minLength: 1
           description: Логин в формате email
-          x-field-extra-annotation: |
-            @jakarta.validation.constraints.NotBlank
-            @jakarta.validation.constraints.Email
         password:
           type: string
           minLength: 8
@@ -294,9 +291,7 @@ components:
             Пароль: ≥ 8 символов, ≥ 1 цифра, без трёх подряд одинаковых символов.
             Проверка шаблоном: ^(?=.*\d)(?!.*(.)\1\1).{8,}$
           pattern: '^(?=.*\d)(?!.*(.)\1\1).{8,}$'
-          x-field-extra-annotation: |
-            @jakarta.validation.constraints.NotBlank
-            @com.kavencore.moneyharbor.app.validation.StrongPassword
+          x-field-extra-annotation: "@com.kavencore.moneyharbor.app.validation.StrongPassword"
           example: Abcdefg1
 
     UserResponse:

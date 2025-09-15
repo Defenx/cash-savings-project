@@ -14,10 +14,10 @@ ALTER TABLE users
 CREATE TABLE roles
 (
     id   UUID PRIMARY KEY NOT NULL,
-    name TEXT             NOT NULL
+    role_name TEXT NOT NULL
 );
 ALTER TABLE roles
-    ADD CONSTRAINT uq_roles_name UNIQUE (name);
+    ADD CONSTRAINT uq_roles_name UNIQUE (role_name);
 
 CREATE TABLE user_roles
 (
@@ -29,11 +29,11 @@ CREATE TABLE user_roles
 );
 
 -- SEEDS FOR ROLES
-INSERT INTO roles (id, name)
-VALUES ('11111111-1111-1111-1111-111111111111', 'USER')
+INSERT INTO roles (id, role_name)
+VALUES (gen_random_uuid(), 'USER')
 ON CONFLICT ON CONSTRAINT uq_roles_name DO NOTHING;
-INSERT INTO roles (id, name)
-VALUES ('22222222-2222-2222-2222-222222222222', 'SUPPORT')
+INSERT INTO roles (id, role_name)
+VALUES (gen_random_uuid(), 'SUPPORT')
 ON CONFLICT ON CONSTRAINT uq_roles_name DO NOTHING;
 
 ALTER TABLE accounts

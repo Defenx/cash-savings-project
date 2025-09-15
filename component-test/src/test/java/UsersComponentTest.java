@@ -1,4 +1,5 @@
 import com.kavencore.moneyharbor.app.entity.Role;
+import com.kavencore.moneyharbor.app.entity.RoleName;
 import com.kavencore.moneyharbor.app.entity.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -7,20 +8,19 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import java.util.Set;
 import java.util.UUID;
 
+import static com.kavencore.moneyharbor.app.api.v1.controller.UserController.SIGN_UP_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @DisplayName("User API — sign-up")
 class UsersComponentTest extends BaseComponentTest {
 
-    private static final String SIGN_UP = "/user/sign-up";
-
     @Test
     @DisplayName("POST /user/sign-up — 201: вернули Location и тело с id/email; email нормализован; пароль захэширован; роль USER выдана")
     void signUp201() throws Exception {
         String json = UserJson.SIGN_UP_OK.load();
 
-        MockHttpServletResponse resp = postJson(SIGN_UP, json)
+        MockHttpServletResponse resp = postJson(SIGN_UP_PATH, json)
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
                 .andExpect(jsonPath("$.id").isString())
@@ -35,7 +35,7 @@ class UsersComponentTest extends BaseComponentTest {
         assertThat(passwordEncoder.matches("Abcdefg1", saved.getPassword())).isTrue();
         assertThat(saved.getPassword()).doesNotContain("Abcdefg1");
 
-        assertThat(saved.getRoles().stream().map(Role::getName)).contains("USER");
+        assertThat(saved.getRoles().stream().map(r -> r.getRoleName().name())).contains(RoleName.USER.name());
     }
 
     @Test
@@ -43,7 +43,7 @@ class UsersComponentTest extends BaseComponentTest {
     void signUp400() throws Exception {
         String json = UserJson.SIGN_UP_INVALID.load();
 
-        postExpectProblem(SIGN_UP, json)
+        postExpectProblem(SIGN_UP_PATH, json)
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentTypeCompatibleWith("application/problem+json"))
                 .andExpect(jsonPath("$.title").value("Bad Request"))
@@ -54,7 +54,7 @@ class UsersComponentTest extends BaseComponentTest {
     @Test
     @DisplayName("POST /user/sign-up — 409: email уже существует → ProblemDetails")
     void signUp409() throws Exception {
-        Role roleUser = roleRepository.findByName("USER").orElseThrow();
+        Role roleUser = roleRepository.findByRoleName(RoleName.USER).orElseThrow();
         User existing = User.builder()
                 .email("dupe@example.com")
                 .password(passwordEncoder.encode("Abcdefg1"))
@@ -63,7 +63,7 @@ class UsersComponentTest extends BaseComponentTest {
         userRepository.save(existing);
 
         String json = UserJson.SIGN_UP_DUPE.load();
-        postExpectProblem(SIGN_UP, json)
+        postExpectProblem(SIGN_UP_PATH, json)
                 .andExpect(status().isConflict())
                 .andExpect(content().contentTypeCompatibleWith("application/problem+json"))
                 .andExpect(jsonPath("$.title").value("Conflict"))

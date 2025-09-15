@@ -1,12 +1,12 @@
 package com.kavencore.moneyharbor.app.config;
 
+import com.kavencore.moneyharbor.app.entity.RoleName;
 import com.kavencore.moneyharbor.app.security.ProblemAccessDeniedHandler;
 import com.kavencore.moneyharbor.app.security.ProblemAuthEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -45,9 +45,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(reg -> reg
                         .requestMatchers("/user/sign-up", "/error").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/accounts").hasRole("USER")
-                        .requestMatchers(HttpMethod.GET, "/accounts/**").hasRole("USER")
-                        .requestMatchers(HttpMethod.DELETE, "/accounts/**").hasRole("USER")
+                        .requestMatchers("/accounts/**").hasRole(RoleName.USER.name())
                         .anyRequest().authenticated()
                 )
                 .httpBasic(b -> b.realmName("api"))
@@ -61,7 +59,7 @@ public class SecurityConfig {
 
 
     @Bean
-    PasswordEncoder passwordEncoder() {
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 }

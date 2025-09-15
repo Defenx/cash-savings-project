@@ -19,7 +19,7 @@ import java.util.UUID;
 public class AccountsController implements AccountsApi {
 
     public static final String ACCOUNTS_PATH = "/accounts";
-    public static final String ACCOUNTS_PATH_WITH_SLASH = "/accounts/";
+    public static final String ACCOUNTS_PATH_WITH_SLASH = ACCOUNTS_PATH + "/";
 
     private final AccountService accountService;
     private final AuthFacade authFacade;
@@ -27,7 +27,7 @@ public class AccountsController implements AccountsApi {
     @Override
     public ResponseEntity<AccountResponseDto> createAccount(CreateAccountRequestDto createAccountRequestDto) {
         CreatedAccountResult result = accountService.createAccount(createAccountRequestDto, authFacade.userId());
-        URI location = UriComponentsBuilder.fromPath(ACCOUNTS_PATH + "/{id}").build(result.id().toString());
+        URI location = UriComponentsBuilder.fromPath(ACCOUNTS_PATH_WITH_SLASH + "{id}").build(result.id().toString());
         return ResponseEntity.created(location).body(result.body());
     }
 

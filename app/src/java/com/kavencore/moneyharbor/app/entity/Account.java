@@ -34,7 +34,6 @@ public class Account {
     private BigDecimal amount;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id")
     private User user;
 
     @Override

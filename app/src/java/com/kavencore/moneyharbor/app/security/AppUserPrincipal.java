@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 public class AppUserPrincipal implements UserDetails {
@@ -23,7 +24,8 @@ public class AppUserPrincipal implements UserDetails {
         this.email = u.getEmail();
         this.passwordHash = u.getPassword();
         this.authorities = u.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName()))
+                .map(r -> "ROLE_" + r.getRoleName().name().toUpperCase(Locale.ROOT))
+                .map(SimpleGrantedAuthority::new)
                 .toList();
     }
 
