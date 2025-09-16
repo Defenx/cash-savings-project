@@ -22,6 +22,10 @@ spring-boot-starter-webmvc-ui = { module = "org.springdoc:springdoc-openapi-star
 swagger-annotations = { module = "io.swagger.core.v3:swagger-annotations", version = "2.2.22" }
 spring-boot-testcontainers = { module = "org.springframework.boot:spring-boot-testcontainers" }
 
+# Security
+spring-boot-starter-security = { module = "org.springframework.boot:spring-boot-starter-security" }
+spring-security-test = { module = "org.springframework.security:spring-security-test" }
+
 commons-compress = { module = "org.apache.commons:commons-compress", version = "1.28.0" }
 
 # Dev-only

@@ -14,6 +14,7 @@ public interface AccountMapper {
     AccountResponseDto toDto(Account entity);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "user", ignore = true)
     Account toEntity(CreateAccountRequestDto req);
 }
 

@@ -10,6 +10,7 @@ dependencies {
     testImplementation(platform(libs.spring.boot.bom))
 
     testImplementation(libs.spring.boot.starter.test)
+    testImplementation(libs.spring.security.test)
 
     testImplementation(libs.spring.boot.starter.web)
 

@@ -1,6 +1,8 @@
 package com.kavencore.moneyharbor.app.infrastructure.exceptionhandler;
 
 import com.kavencore.moneyharbor.app.infrastructure.exception.AccountNotFoundException;
+import com.kavencore.moneyharbor.app.infrastructure.exception.EmailTakenException;
+import com.kavencore.moneyharbor.app.infrastructure.exception.MissingRoleException;
 import com.kavencore.moneyharbor.app.infrastructure.logging.HttpErrorLogger;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
@@ -23,6 +25,7 @@ import java.util.List;
 public class GlobalExceptionHandler {
 
     private final HttpErrorLogger errorLogger;
+    private final ProblemDetailsFactory pdFactory;
 
 
     @ExceptionHandler(AccountNotFoundException.class)
@@ -36,8 +39,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ProblemDetail> handleTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest req) {
         ProblemDetail pd = getProblemDetail(req, HttpStatus.BAD_REQUEST);
-        pd.setDetail("Invalid UUID in path parameter 'id'");
-        errorLogger.logClientError(req, HttpStatus.BAD_REQUEST.value(), ex, null);
+        String name = ex.getName();
+        if (ex.getRequiredType() == java.util.UUID.class) {
+            pd.setDetail("Invalid UUID in path parameter '" + name + "'");
+        } else {
+            pd.setDetail("Invalid value for '" + name + "'");
+        }
+        errorLogger.logClientError(req, HttpStatus.BAD_REQUEST.value(), ex, name);
         return ResponseEntity.badRequest().body(pd);
     }
 
@@ -72,6 +80,22 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(pd);
     }
 
+    @ExceptionHandler(EmailTakenException.class)
+    public ResponseEntity<ProblemDetail> handleEmailTaken(EmailTakenException ex, HttpServletRequest req) {
+        ProblemDetail pd = getProblemDetail(req, HttpStatus.CONFLICT);
+        pd.setDetail("Email already registered: " + ex.getEmail());
+        errorLogger.logClientError(req, HttpStatus.CONFLICT.value(), ex, ex.getEmail());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(pd);
+    }
+
+    @ExceptionHandler(MissingRoleException.class)
+    public ResponseEntity<ProblemDetail> handleMissingRole(MissingRoleException ex, HttpServletRequest req) {
+        ProblemDetail pd = getProblemDetail(req, HttpStatus.INTERNAL_SERVER_ERROR);
+        pd.setDetail("Server misconfiguration: required role is missing");
+        errorLogger.logServerError(req, HttpStatus.INTERNAL_SERVER_ERROR.value(), ex, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(pd);
+    }
+
     @ExceptionHandler(ErrorResponseException.class)
     public ResponseEntity<ProblemDetail> handleErrorResponse(ErrorResponseException ex, HttpServletRequest req) {
         ProblemDetail pd = ex.getBody();
@@ -88,10 +112,7 @@ public class GlobalExceptionHandler {
     }
 
     private ProblemDetail getProblemDetail(HttpServletRequest req, HttpStatus status) {
-        ProblemDetail pd = ProblemDetail.forStatus(status);
-        pd.setTitle(status.getReasonPhrase());
-        pd.setInstance(URI.create(req.getRequestURI()));
-        return pd;
+        return pdFactory.build(req, status, null);
     }
 
     private String firstOrNull(List<String> list) {
