@@ -3,6 +3,9 @@ import com.kavencore.moneyharbor.app.entity.RoleName;
 import com.kavencore.moneyharbor.app.entity.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.util.Set;
@@ -22,18 +25,18 @@ class UsersComponentTest extends BaseComponentTest {
 
         MockHttpServletResponse resp = postJson(SIGN_UP_PATH, json)
                 .andExpect(status().isCreated())
-                .andExpect(header().exists("Location"))
+                .andExpect(header().exists(HttpHeaders.LOCATION))
                 .andExpect(jsonPath("$.id").isString())
-                .andExpect(jsonPath("$.email").value("alice@example.com")) // нормализация
+                .andExpect(jsonPath("$.email").value(USER_TEST_EMAIL))
                 .andReturn().getResponse();
 
         UUID id = TestUtils.extractIdFromLocation(resp);
         User saved = userRepository.findWithRolesById(id).orElseThrow();
 
-        assertThat(saved.getEmail()).isEqualTo("alice@example.com");
+        assertThat(saved.getEmail()).isEqualTo(USER_TEST_EMAIL);
 
-        assertThat(passwordEncoder.matches("Abcdefg1", saved.getPassword())).isTrue();
-        assertThat(saved.getPassword()).doesNotContain("Abcdefg1");
+        assertThat(passwordEncoder.matches(TEST_PASSWORD, saved.getPassword())).isTrue();
+        assertThat(saved.getPassword()).doesNotContain(TEST_PASSWORD);
 
         assertThat(saved.getRoles().stream().map(r -> r.getRoleName().name())).contains(RoleName.USER.name());
     }
@@ -45,8 +48,8 @@ class UsersComponentTest extends BaseComponentTest {
 
         postExpectProblem(SIGN_UP_PATH, json)
                 .andExpect(status().isBadRequest())
-                .andExpect(content().contentTypeCompatibleWith("application/problem+json"))
-                .andExpect(jsonPath("$.title").value("Bad Request"))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+                .andExpect(jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
                 .andExpect(jsonPath("$.errors[?(@ =~ /.*email.*/)]").isNotEmpty())
                 .andExpect(jsonPath("$.errors[?(@ =~ /.*password.*/)]").isNotEmpty());
     }
@@ -57,7 +60,7 @@ class UsersComponentTest extends BaseComponentTest {
         Role roleUser = roleRepository.findByRoleName(RoleName.USER).orElseThrow();
         User existing = User.builder()
                 .email("dupe@example.com")
-                .password(passwordEncoder.encode("Abcdefg1"))
+                .password(passwordEncoder.encode(TEST_PASSWORD))
                 .roles(Set.of(roleUser))
                 .build();
         userRepository.save(existing);
@@ -65,8 +68,8 @@ class UsersComponentTest extends BaseComponentTest {
         String json = UserJson.SIGN_UP_DUPE.load();
         postExpectProblem(SIGN_UP_PATH, json)
                 .andExpect(status().isConflict())
-                .andExpect(content().contentTypeCompatibleWith("application/problem+json"))
-                .andExpect(jsonPath("$.title").value("Conflict"))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+                .andExpect(jsonPath("$.title").value(HttpStatus.CONFLICT.getReasonPhrase()))
                 .andExpect(jsonPath("$.detail", org.hamcrest.Matchers.containsString("Email already registered")));
     }
 }

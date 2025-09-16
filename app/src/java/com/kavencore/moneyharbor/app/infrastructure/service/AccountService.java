@@ -34,18 +34,22 @@ public class AccountService {
         acc.setUser(userRepository.getReferenceById(userId));
         applyDefaults(acc);
         Account savedAcc = accountRepository.save(acc);
+
         return new CreatedAccountResult(savedAcc.getId(), accountMapper.toDto(savedAcc));
     }
 
     @Transactional(readOnly = true)
     public AccountResponseDto getAccountById(UUID id, UUID userId) {
-        Account account = accountRepository.findByIdAndUserId(id, userId).orElseThrow(() -> new AccountNotFoundException(id));
+        Account account = accountRepository.findByIdAndUserId(id, userId)
+                .orElseThrow(() -> new AccountNotFoundException(id));
+
         return accountMapper.toDto(account);
     }
 
     @Transactional
     public boolean delete(UUID id, UUID userId) {
         int affected = accountRepository.deleteByIdAndUserId(id, userId);
+
         return affected > 0;
     }
 

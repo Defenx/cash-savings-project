@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -38,7 +39,8 @@ public abstract class BaseComponentTest {
     @Autowired
     protected RoleRepository roleRepository;
 
-    protected static final String TEST_EMAIL = "test.user@example.com";
+    protected static final String ACCOUNT_TEST_EMAIL = "test.user@example.com";
+    protected static final String USER_TEST_EMAIL = "alice@example.com";
     protected static final String TEST_PASSWORD = "Abcdefg1";
     protected UUID testUserId;
 
@@ -47,12 +49,12 @@ public abstract class BaseComponentTest {
     void ensureTestUser() {
         try {
             UserSignUpRequestDto req = new UserSignUpRequestDto()
-                    .email(TEST_EMAIL)
+                    .email(ACCOUNT_TEST_EMAIL)
                     .password(TEST_PASSWORD);
             SignUpResult result = userService.signUp(req);
             testUserId = result.id();
         } catch (EmailTakenException ignore) {
-            testUserId = userRepository.findByEmail(TEST_EMAIL).orElseThrow().getId();
+            testUserId = userRepository.findByEmail(ACCOUNT_TEST_EMAIL).orElseThrow().getId();
         }
     }
 
@@ -64,35 +66,35 @@ public abstract class BaseComponentTest {
 
     protected ResultActions performPostAuth(String path, String json) throws Exception {
         return mvc.perform(MockMvcRequestBuilders.post(path)
-                .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
-                .contentType("application/json")
-                .accept("application/json")
+                .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON_VALUE)
                 .content(json));
     }
 
     protected ResultActions performPostNoAuth(String path, String json) throws Exception {
         return mvc.perform(MockMvcRequestBuilders.post(path)
-                .contentType("application/json")
-                .accept("application/json")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON_VALUE)
                 .content(json));
     }
 
     protected ResultActions performDeleteAuthOk(String path) throws Exception {
         return mvc.perform(MockMvcRequestBuilders.delete(path)
-                .with(httpBasic(TEST_EMAIL, TEST_PASSWORD)));
+                .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD)));
     }
 
     protected ResultActions postJson(String path, String json) throws Exception {
         return mvc.perform(MockMvcRequestBuilders.post(path)
-                .contentType("application/json")
-                .accept("application/json")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON_VALUE)
                 .content(json));
     }
 
     protected ResultActions postExpectProblem(String path, String json) throws Exception {
         return mvc.perform(MockMvcRequestBuilders.post(path)
-                .contentType("application/json")
-                .accept("application/problem+json")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_PROBLEM_JSON_VALUE)
                 .content(json));
     }
 }

@@ -2,7 +2,9 @@ import com.kavencore.moneyharbor.app.entity.Account;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -27,7 +29,7 @@ class AccountsComponentTest extends BaseComponentTest {
 
         MockHttpServletResponse response = performPostAuth(ACCOUNTS_PATH, json)
                 .andExpect(status().isCreated())
-                .andExpect(MockMvcResultMatchers.header().exists("Location"))
+                .andExpect(MockMvcResultMatchers.header().exists(HttpHeaders.LOCATION))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("Зарплатный"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.currency").value("RUB"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.amount").value(1500.50))
@@ -48,7 +50,7 @@ class AccountsComponentTest extends BaseComponentTest {
         String json = AccountJson.CREATE_WITHOUT_TITLE.load();
 
         MockHttpServletResponse response = performPostAuth(ACCOUNTS_PATH, json)
-                .andExpect(MockMvcResultMatchers.header().exists("Location"))
+                .andExpect(MockMvcResultMatchers.header().exists(HttpHeaders.LOCATION))
                 .andReturn().getResponse();
 
         UUID id = TestUtils.extractIdFromLocation(response);
@@ -97,11 +99,11 @@ class AccountsComponentTest extends BaseComponentTest {
         UUID missing = UUID.randomUUID();
         mvc.perform(MockMvcRequestBuilders
                         .get(ACCOUNTS_PATH_WITH_SLASH + missing)
-                        .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
-                        .accept("application/problem+json"))
+                        .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
+                        .accept(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
                 .andExpect(status().isNotFound())
-                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith("application/problem+json"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("Not Found"))
+                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.NOT_FOUND.getReasonPhrase()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.detail").value("Account not found: " + missing));
     }
     @Test
@@ -111,13 +113,13 @@ class AccountsComponentTest extends BaseComponentTest {
 
         mvc.perform(MockMvcRequestBuilders
                         .post(ACCOUNTS_PATH)
-                        .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
-                        .contentType("application/json")
-                        .accept("application/problem+json")
+                        .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .accept(MediaType.APPLICATION_PROBLEM_JSON_VALUE)
                         .content(badJson))
                 .andExpect(status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith("application/problem+json"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("Bad Request"))
+                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.detail").value("Invalid value in request body"));
     }
 
@@ -126,11 +128,11 @@ class AccountsComponentTest extends BaseComponentTest {
     void getInvalidUuid400() throws Exception {
         mvc.perform(MockMvcRequestBuilders
                         .get(ACCOUNTS_PATH_WITH_SLASH + "abc")
-                        .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
-                        .accept("application/problem+json"))
+                        .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
+                        .accept(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
                 .andExpect(status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith("application/problem+json"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("Bad Request"))
+                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.detail").value("Invalid UUID in path parameter 'id'"));
     }
 
@@ -139,11 +141,11 @@ class AccountsComponentTest extends BaseComponentTest {
     void deleteInvalidUuid400() throws Exception {
         mvc.perform(MockMvcRequestBuilders
                         .get(ACCOUNTS_PATH_WITH_SLASH + "abc")
-                        .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
-                        .accept("application/problem+json"))
+                        .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
+                        .accept(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
                 .andExpect(status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith("application/problem+json"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("Bad Request"))
+                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.detail").value("Invalid UUID in path parameter 'id'"));
     }
 
@@ -153,13 +155,13 @@ class AccountsComponentTest extends BaseComponentTest {
         String json = AccountJson.CREATE_WITH_CURRENCY_NOT_IN_ENUM.load();
 
         mvc.perform(MockMvcRequestBuilders.post(ACCOUNTS_PATH)
-                        .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
-                        .contentType("application/json")
-                        .accept("application/problem+json")
+                        .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .accept(MediaType.APPLICATION_PROBLEM_JSON_VALUE)
                         .content(json))
                 .andExpect(status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith("application/problem+json"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("Bad Request"))
+                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.detail").value("Invalid value in request body"));
     }
 
@@ -169,13 +171,13 @@ class AccountsComponentTest extends BaseComponentTest {
         String json = AccountJson.CREATE_MISSING_CURRENCY.load();
 
         mvc.perform(MockMvcRequestBuilders.post(ACCOUNTS_PATH)
-                        .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
-                        .contentType("application/json")
-                        .accept("application/problem+json")
+                        .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .accept(MediaType.APPLICATION_PROBLEM_JSON_VALUE)
                         .content(json))
                 .andExpect(status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith("application/problem+json"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("Bad Request"))
+                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.errors[0]").value(org.hamcrest.Matchers.containsString("currency")));
     }
 
@@ -185,13 +187,13 @@ class AccountsComponentTest extends BaseComponentTest {
         String json = AccountJson.CREATE_AMOUNT_SCALE_3.load();
 
         mvc.perform(MockMvcRequestBuilders.post(ACCOUNTS_PATH)
-                        .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
-                        .contentType("application/json")
-                        .accept("application/problem+json")
+                        .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .accept(MediaType.APPLICATION_PROBLEM_JSON_VALUE)
                         .content(json))
                 .andExpect(status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith("application/problem+json"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("Bad Request"))
+                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.errors[0]").value(org.hamcrest.Matchers.containsString("amount")));
     }
 
@@ -201,13 +203,13 @@ class AccountsComponentTest extends BaseComponentTest {
         String json = AccountJson.CREATE_AMOUNT_INTEGER_TOO_LONG.load();
 
         mvc.perform(MockMvcRequestBuilders.post(ACCOUNTS_PATH)
-                        .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
-                        .contentType("application/json")
-                        .accept("application/problem+json")
+                        .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .accept(MediaType.APPLICATION_PROBLEM_JSON_VALUE)
                         .content(json))
                 .andExpect(status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith("application/problem+json"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("Bad Request"))
+                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.errors[0]").value(org.hamcrest.Matchers.containsString("amount")));
     }
 
@@ -217,13 +219,13 @@ class AccountsComponentTest extends BaseComponentTest {
         String json = AccountJson.CREATE_TITLE_WRONG_TYPE.load();
 
         mvc.perform(MockMvcRequestBuilders.post(ACCOUNTS_PATH)
-                        .with(httpBasic(TEST_EMAIL, TEST_PASSWORD))
-                        .contentType("application/json")
-                        .accept("application/problem+json")
+                        .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .accept(MediaType.APPLICATION_PROBLEM_JSON_VALUE)
                         .content(json))
                 .andExpect(status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith("application/problem+json"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("Bad Request"))
+                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.detail").value("Invalid value in request body"));
     }
 
@@ -234,6 +236,6 @@ class AccountsComponentTest extends BaseComponentTest {
 
         performPostNoAuth(ACCOUNTS_PATH, json)
                 .andExpect(status().isUnauthorized())
-                .andExpect(MockMvcResultMatchers.header().doesNotExist("Location"));
+                .andExpect(MockMvcResultMatchers.header().doesNotExist(HttpHeaders.LOCATION));
     }
 }

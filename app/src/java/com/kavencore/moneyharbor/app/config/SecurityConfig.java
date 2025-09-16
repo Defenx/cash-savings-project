@@ -6,10 +6,12 @@ import com.kavencore.moneyharbor.app.security.ProblemAuthEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
+import org.springframework.security.config.annotation.web.configurers.RequestCacheConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,38 +24,38 @@ public class SecurityConfig {
 
     private static final String[] SWAGGER = {
             "/v3/api-docs/**",
+            "/v3/api-docs.yaml",
             "/swagger-ui/**",
             "/swagger-ui.html",
-            "/swagger/**"
+            "/swagger-resources/**",
+            "/swagger/**",
     };
 
     @Bean
-    @Order(1)
-    SecurityFilterChain swaggerChain(HttpSecurity http) throws Exception {
-        return http
-                .securityMatcher(SWAGGER)
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(reg -> reg.anyRequest().permitAll())
-                .build();
-    }
-
-    @Bean
-    @Order(2)
-    SecurityFilterChain appChain(HttpSecurity http, ProblemAuthEntryPoint authEntryPoint,
-                                 ProblemAccessDeniedHandler accessDeniedHandler) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   ProblemAuthEntryPoint authEntryPoint,
+                                                   ProblemAccessDeniedHandler accessDeniedHandler) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(reg -> reg
-                        .requestMatchers("/user/sign-up", "/error").permitAll()
-                        .requestMatchers("/accounts/**").hasRole(RoleName.USER.name())
-                        .anyRequest().authenticated()
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .formLogin(AbstractHttpConfigurer::disable)
+                .logout(AbstractHttpConfigurer::disable)
+                .requestCache(RequestCacheConfigurer::disable)
+                .headers(h -> h
+                        .contentTypeOptions(Customizer.withDefaults())
+                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::deny)
                 )
-                .httpBasic(b -> b.realmName("api"))
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(authEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler)
                 )
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(SWAGGER).permitAll()
+                        .requestMatchers("/user/sign-up", "/error").permitAll()
+                        .requestMatchers("/accounts/**").hasRole(RoleName.USER.name())
+                        .anyRequest().authenticated()
+                )
+                .httpBasic(Customizer.withDefaults())
                 .build();
     }
 

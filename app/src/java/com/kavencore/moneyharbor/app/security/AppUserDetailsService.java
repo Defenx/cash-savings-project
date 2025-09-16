@@ -24,7 +24,7 @@ public class AppUserDetailsService implements UserDetailsService {
             return userRepository.findByEmail(normalizedEmail)
                     .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         } else {
-            return null;
+            throw new UsernameNotFoundException("Email cannot be empty");
         }
     }
 }

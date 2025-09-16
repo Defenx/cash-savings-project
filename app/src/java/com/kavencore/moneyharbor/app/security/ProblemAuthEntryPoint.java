@@ -7,12 +7,15 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+
+import static com.kavencore.moneyharbor.app.security.SecurityMessages.AUTHENTICATION_REQUIRED;
 
 @Component
 @RequiredArgsConstructor
@@ -23,9 +26,9 @@ public class ProblemAuthEntryPoint implements AuthenticationEntryPoint {
     @Override
     public void commence(HttpServletRequest req, HttpServletResponse res, AuthenticationException e) throws IOException {
         HttpStatus status = HttpStatus.UNAUTHORIZED;
-        ProblemDetail pd = pdFactory.build(req, status, "Authentication required");
+        ProblemDetail pd = pdFactory.build(req, status, AUTHENTICATION_REQUIRED);
         res.setStatus(status.value());
-        res.setContentType("application/problem+json");
+        res.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
         res.addHeader(HttpHeaders.WWW_AUTHENTICATE, "Basic realm=\"MoneyHarbor API\"");
         om.writeValue(res.getOutputStream(), pd);
     }
