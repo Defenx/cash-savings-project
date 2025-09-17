@@ -5,7 +5,9 @@ import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -36,6 +38,10 @@ public class Account {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private User user;
 
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<Operation> operations = new HashSet<>();
+
     @Override
     public final boolean equals(Object o) {
         if (this == o) return true;
@@ -52,5 +58,13 @@ public class Account {
         return this instanceof HibernateProxy
                 ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode()
                 : getClass().hashCode();
+    }
+
+    public void addOperation(Operation operation) {
+        if (operation == null) return;
+        if (!this.equals(operation.getAccount())) {
+            this.operations.add(operation);
+            operation.setAccount(this);
+        }
     }
 }
