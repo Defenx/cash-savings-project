@@ -1,5 +1,7 @@
 databaseChangeLog:
-  - include:
-      file: db/changelog/001-init-accounts.sql
-  - include:
-      file: db/changelog/002-init-operations.sql
+  - include: { file: 001-init-accounts.sql,
+               relativeToChangelogFile: true }
+  - include: { file: 002-auth-and-fk.sql,
+               relativeToChangelogFile: true }
+  - include: { file: 003-init-operations.sql,
+               relativeToChangelogFile: true }
