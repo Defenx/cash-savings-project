@@ -3,38 +3,47 @@ package com.kavencore.moneyharbor.app.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
+import org.springframework.security.core.GrantedAuthority;
 
-import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "accounts")
 @Getter
 @Setter
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @ToString(onlyExplicitlyIncluded = true)
-public class Account {
+@Table(name = "roles")
+public class Role implements GrantedAuthority {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @ToString.Include
     private UUID id;
 
-    @ToString.Include
-    private String title;
-
     @Enumerated(EnumType.STRING)
     @ToString.Include
-    private Currency currency;
+    private RoleName roleName;
 
-    @ToString.Include
-    private BigDecimal amount;
+    @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
+    @Builder.Default
+    private Set<User> users = new HashSet<>();
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    private User user;
+    public void addUser(User user) {
+        if (user == null) return;
+        this.users.add(user);
+        user.getRoles().add(this);
+    }
+
+    public void removeUser(User user) {
+        if (user == null) return;
+        this.users.remove(user);
+        user.getRoles().remove(this);
+    }
 
     @Override
     public final boolean equals(Object o) {
@@ -43,8 +52,8 @@ public class Account {
         Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
         Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;
-        Account account = (Account) o;
-        return getId() != null && Objects.equals(getId(), account.getId());
+        Role role = (Role) o;
+        return getId() != null && Objects.equals(getId(), role.getId());
     }
 
     @Override
@@ -52,5 +61,10 @@ public class Account {
         return this instanceof HibernateProxy
                 ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode()
                 : getClass().hashCode();
+    }
+
+    @Override
+    public String getAuthority() {
+        return "ROLE_" + roleName.name();
     }
 }

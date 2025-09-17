@@ -32,6 +32,10 @@ dependencies {
     implementation(libs.spring.boot.starter.validation)
     implementation(libs.spring.boot.starter.webmvc.ui)
 
+    // Security
+    implementation(libs.spring.boot.starter.security)
+
+
     // Config props hints
     annotationProcessor(libs.spring.boot.configuration.processor)
 
@@ -59,7 +63,7 @@ dependencies {
 
 }
 
-val generatedRoot = layout.buildDirectory.dir("generated/accounts")
+val generatedRoot = layout.buildDirectory.dir("generated/")
 
 openApiGenerate {
     generatorName.set("spring")
@@ -76,6 +80,7 @@ openApiGenerate {
             "useJakartaEe" to "true",
             "openApiNullable" to "false",
             "useBeanValidation" to "true",
+            "performBeanValidation" to "true",
             "useBigDecimal" to "true",
             "dateLibrary" to "java8",
             "hideGenerationTimestamp" to "true",
