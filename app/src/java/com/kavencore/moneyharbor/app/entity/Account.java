@@ -5,9 +5,9 @@ import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.math.BigDecimal;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -38,9 +38,9 @@ public class Account {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private User user;
 
-    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "account")
     @Builder.Default
-    private Set<Operation> operations = new HashSet<>();
+    private List<Operation> operations = new ArrayList<>();
 
     @Override
     public final boolean equals(Object o) {
