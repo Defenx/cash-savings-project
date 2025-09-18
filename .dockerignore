@@ -1,0 +1,15 @@
+.git
+**/.git
+**/.idea
+**/.vscode
+**/.DS_Store
+.gradle
+**/.gradle
+build
+**/build
+out
+**/out
+node_modules
+*.iml
+docker-compose*.yml
+Dockerfile*

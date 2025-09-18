@@ -104,7 +104,7 @@ sourceSets {
 
     named("main") { java.srcDir(genJava) }
 }
-
+tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") { archiveFileName.set("app.jar") }
 tasks.named("compileJava") { dependsOn("openApiGenerate") }
 tasks.matching { it.name == "bootRun" }.configureEach { dependsOn("openApiGenerate") }
 
