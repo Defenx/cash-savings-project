@@ -1,3 +1,7 @@
+--liquibase formatted sql
+
+--changeset andreyterex:2
+--comment: создание таблиц users, roles, user_roles, добавление user_id в accounts, индексы и сиды
 --USERS
 CREATE TABLE users
 (
@@ -47,3 +51,10 @@ ALTER TABLE accounts
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE RESTRICT;
 
 CREATE INDEX ix_accounts_user ON accounts (user_id);
+-- rollback DROP INDEX IF EXISTS ix_accounts_user;
+-- rollback ALTER TABLE accounts DROP CONSTRAINT IF EXISTS fk_accounts_user;
+-- rollback ALTER TABLE accounts ALTER COLUMN user_id DROP NOT NULL;
+-- rollback ALTER TABLE accounts DROP COLUMN IF EXISTS user_id;
+-- rollback DROP TABLE IF EXISTS user_roles;
+-- rollback DROP TABLE IF EXISTS roles;
+-- rollback DROP TABLE IF EXISTS users;
