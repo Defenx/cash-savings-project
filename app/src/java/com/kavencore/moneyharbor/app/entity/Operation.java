@@ -1,45 +1,62 @@
 package com.kavencore.moneyharbor.app.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
 @Entity
-@Table(name = "accounts")
+@Table(name = "operations")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(onlyExplicitlyIncluded = true)
-public class Account {
+public class Operation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @ToString.Include
     private UUID id;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @ToString.Include
-    private String title;
+    private Account account;
 
-    @Enumerated(EnumType.STRING)
     @ToString.Include
-    private Currency currency;
+    private LocalDate date;
+
+    @CreationTimestamp
+    private OffsetDateTime createdDate;
+
+    private String description;
 
     @ToString.Include
     private BigDecimal amount;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    private User user;
-
-    @OneToMany(mappedBy = "account")
-    private List<Operation> operations;
+    @Enumerated(EnumType.STRING)
+    @ToString.Include
+    private Currency currency;
 
     @Override
     public final boolean equals(Object o) {
@@ -48,8 +65,8 @@ public class Account {
         Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
         Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;
-        Account account = (Account) o;
-        return getId() != null && Objects.equals(getId(), account.getId());
+        Operation operation = (Operation) o;
+        return getId() != null && Objects.equals(getId(), operation.getId());
     }
 
     @Override
@@ -57,13 +74,5 @@ public class Account {
         return this instanceof HibernateProxy
                 ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode()
                 : getClass().hashCode();
-    }
-
-    public void addOperation(Operation operation) {
-        if (operation == null) return;
-        if (!this.equals(operation.getAccount())) {
-            this.operations.add(operation);
-            operation.setAccount(this);
-        }
     }
 }
