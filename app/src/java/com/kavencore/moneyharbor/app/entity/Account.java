@@ -40,7 +40,7 @@ public class Account {
 
     @OneToMany(mappedBy = "account")
     @Builder.Default
-    private List<Operation> operations = new ArrayList<>();
+    private List<Operation> operations;
 
     @Override
     public final boolean equals(Object o) {
