@@ -39,7 +39,6 @@ public class Account {
     private User user;
 
     @OneToMany(mappedBy = "account")
-    @Builder.Default
     private List<Operation> operations;
 
     @Override
