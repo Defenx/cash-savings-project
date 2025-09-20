@@ -42,6 +42,7 @@ public abstract class BaseComponentTest {
     protected static final String ACCOUNT_TEST_EMAIL = "test.user@example.com";
     protected static final String USER_TEST_EMAIL = "alice@example.com";
     protected static final String TEST_PASSWORD = "Abcdefg1";
+    protected static final String EMPTY_JSON_BODY = "{}";
     protected UUID testUserId;
 
 

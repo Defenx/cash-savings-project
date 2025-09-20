@@ -2,15 +2,11 @@ openapi: 3.0.3
 info:
   title: MoneyHarbor — Accounts API
   version: 1.0.0
-  description: |
-    API для работы со счетами.
-    Правило: если при создании передан `title: null`, сервер генерирует строку `"{currency}_счет"`.
 servers:
   - url: http://localhost:8080
 tags:
   - name: Accounts
   - name: User
-    description: Регистрация и аутентификация
 
 security:
   - BasicAuth: [ ]
@@ -18,7 +14,7 @@ security:
 paths:
   /accounts:
     post:
-      tags: [Accounts]
+      tags: [ Accounts ]
       summary: Create account
       description: |
         Создаёт счёт. `title` необязателен; если `null`, сервер сгенерирует `"{currency}_счет"`.
@@ -56,7 +52,7 @@ paths:
 
   /accounts/{id}:
     get:
-      tags: [Accounts]
+      tags: [ Accounts ]
       summary: Get account by id
       operationId: getAccountById
       parameters:
@@ -84,7 +80,7 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
 
     delete:
-      tags: [Accounts]
+      tags: [ Accounts ]
       summary: Delete account
       operationId: deleteAccount
       parameters:
@@ -160,6 +156,18 @@ paths:
                     title: "Conflict"
                     status: 409
                     detail: "Email already registered: alice@example.com"
+  /user/profile:
+    get:
+      tags: [ User ]
+      operationId: getUserProfile
+      summary: Получение информации о профиле пользователя
+      description: Получение информации о профиле пользователя, включает в себя информацию о пользователе и его счетах
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserProfileResponse' }
 
 components:
   securitySchemes:
@@ -196,16 +204,37 @@ components:
     Currency:
       type: string
       description: Код валюты по ISO 4217.
-      enum: [BYN, RUB, USD]
+      enum: [ BYN, RUB, USD ]
       x-enum-descriptions:
         - "Белорусский рубль"
         - "Российский рубль"
         - "Доллар США"
       example: RUB
 
+    UserAccountDtoResponse:
+      type: object
+      required: [ currency, title, amount ]
+      properties:
+        title:
+          type: string
+          description: Если null — сервер сгенерирует "{currency}_счет".
+          example: RUB_счет
+        currency:
+          $ref: '#/components/schemas/Currency'
+        amount:
+          type: number
+          x-java-type: java.math.BigDecimal
+          description: Денежная сумма; соответствует NUMERIC(19,2).
+          example: 0
+      example:
+        title: RUB_счет
+        currency: RUB
+        amount: 0
+
+
     CreateAccountRequest:
       type: object
-      required: [currency]
+      required: [ currency ]
       properties:
         title:
           type: string
@@ -234,7 +263,7 @@ components:
 
     AccountResponse:
       type: object
-      required: [title, currency, amount]
+      required: [ title, currency, amount ]
       properties:
         title:
           type: string
@@ -294,6 +323,19 @@ components:
           pattern: '^(?=.*\d)(?!.*(.)\1{2}).{8,}$'
           example: Abcdefg1
           x-pattern-message: 'Пароль: ≥ 8, хотя бы одна цифра, без трёх одинаковых символов подряд'
+    UserProfileResponse:
+      type: object
+      required: [ email, accounts ]
+      properties:
+        email:
+          type: string
+          format: email
+          description: Логин в формате email
+        accounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserAccountDtoResponse"
+          description: Информация о счетах пользователя
 
     UserResponse:
       type: object

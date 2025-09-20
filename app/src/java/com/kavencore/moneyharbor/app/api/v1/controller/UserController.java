@@ -1,6 +1,7 @@
 package com.kavencore.moneyharbor.app.api.v1.controller;
 
 import com.kavencore.moneyharbor.app.api.controller.UserApi;
+import com.kavencore.moneyharbor.app.api.model.UserProfileResponseDto;
 import com.kavencore.moneyharbor.app.api.model.UserResponseDto;
 import com.kavencore.moneyharbor.app.api.model.UserSignUpRequestDto;
 import com.kavencore.moneyharbor.app.api.v1.dto.SignUpResult;
@@ -18,7 +19,8 @@ public class UserController implements UserApi {
 
     public static final String USER_PATH = "/user";
     public static final String USER_PATH_WITH_SLASH = USER_PATH + "/";
-    public static final String SIGN_UP_PATH = "/user/sign-up";
+    public static final String SIGN_UP_PATH = USER_PATH + "/sign-up";
+    public static final String GET_PROFILE_PATH = USER_PATH + "/profile";
     private final UserService userService;
 
     @Override
@@ -28,5 +30,12 @@ public class UserController implements UserApi {
         URI location = URI.create(USER_PATH_WITH_SLASH + result.id());
 
         return ResponseEntity.created(location).body(body);
+    }
+
+    @Override
+    public ResponseEntity<UserProfileResponseDto> getUserProfile() {
+        UserProfileResponseDto userProfile = userService.getUserProfile();
+
+        return ResponseEntity.ok(userProfile);
     }
 }

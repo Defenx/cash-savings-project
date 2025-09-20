@@ -17,6 +17,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import static com.kavencore.moneyharbor.app.api.v1.controller.UserController.GET_PROFILE_PATH;
+import static com.kavencore.moneyharbor.app.api.v1.controller.UserController.SIGN_UP_PATH;
+
 @Configuration
 @EnableMethodSecurity
 @RequiredArgsConstructor
@@ -51,8 +54,8 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(SWAGGER).permitAll()
-                        .requestMatchers("/user/sign-up", "/error").permitAll()
-                        .requestMatchers("/accounts/**").hasRole(RoleName.USER.name())
+                        .requestMatchers(SIGN_UP_PATH, "/error").permitAll()
+                        .requestMatchers("/accounts/**", GET_PROFILE_PATH).hasRole(RoleName.USER.name())
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults())
