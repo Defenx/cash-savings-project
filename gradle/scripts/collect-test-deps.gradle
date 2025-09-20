@@ -1,0 +1,11 @@
+gradle.afterProject { prj ->
+    if (prj.path == ":component-test") {
+        prj.tasks.register("collectTestRuntimeJars", Copy) { t ->
+            def jars = prj.configurations.getByName("testRuntimeClasspath")
+                    .resolve()
+                    .findAll { it.name.endsWith(".jar") }
+            t.from(jars)
+            t.into(new File(gradle.rootProject.layout.buildDirectory.get().asFile, "depcheck/component-test"))
+        }
+    }
+}

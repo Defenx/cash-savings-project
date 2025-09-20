@@ -68,30 +68,77 @@ jobs:
           path: "**/build/reports/tests/test/**"
 
   depcheck_manual:
-    name: Dependency scan (manual)
+    name: Dependency scan (manual, app + component-test)
     if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Run OWASP Dependency-Check (fail on CVSS threshold)
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      - name: Build fat jar (:app:bootJar)
+        run: ./gradlew :app:bootJar --no-daemon
+
+      - name: Collect component-test testRuntime jars
+        run: ./gradlew -I gradle/scripts/collect-test-deps.gradle :component-test:collectTestRuntimeJars --no-daemon
+
+      - name: DepCheck scan - app fat-jar
+        id: app_scan
+        continue-on-error: true
         uses: dependency-check/Dependency-Check_Action@main
-        id: depcheck
         env:
           JAVA_HOME: /opt/jdk
         with:
-          project: "moneyharbor"
-          path: "."
+          project: "moneyharbor-app"
+          path: app/build/libs/app.jar
           format: "HTML"
-          out: "reports"
+          out: "reports-app"
           args: >
             --failOnCVSS ${{ github.event.inputs.failOnCVSS }}
 
-      - name: Upload HTML report
+      - name: Upload app report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: dependency-check-report
-          path: reports/dependency-check-report.html
+          name: dependency-check-report-app
+          path: reports-app/dependency-check-report.html
+
+      - name: DepCheck scan - component-test jars
+        id: ctest_scan
+        continue-on-error: true
+        uses: dependency-check/Dependency-Check_Action@main
+        env:
+          JAVA_HOME: /opt/jdk
+        with:
+          project: "moneyharbor-component-test"
+          path: build/depcheck/component-test
+          format: "HTML"
+          out: "reports-component-test"
+          args: >
+            --failOnCVSS ${{ github.event.inputs.failOnCVSS }}
+
+      - name: Upload component-test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report-component-test
+          path: reports-component-test/dependency-check-report.html
+
+      - name: Set final conclusion (fail if any scan failed)
+        run: |
+          echo "app_scan:    ${{ steps.app_scan.outcome }}"
+          echo "ctest_scan:  ${{ steps.ctest_scan.outcome }}"
+          if [ "${{ steps.app_scan.outcome }}" = "failure" ] || [ "${{ steps.ctest_scan.outcome }}" = "failure" ]; then
+            echo "At least one scan failed the CVSS threshold."
+            exit 1
+          else
+            echo "All scans passed the CVSS threshold."
+          fi
 
