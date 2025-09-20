@@ -103,9 +103,8 @@ class UsersComponentTest extends BaseComponentTest {
     void profileWithoutAuth401() throws Exception {
         mvc.perform(MockMvcRequestBuilders
                         .get(GET_PROFILE_PATH)
-                        .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
                         .accept(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(status().isOk());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

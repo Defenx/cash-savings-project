@@ -330,7 +330,6 @@ components:
         email:
           type: string
           format: email
-          minLength: 1
           description: Логин в формате email
         accounts:
           type: array
