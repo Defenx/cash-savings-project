@@ -1,0 +1,44 @@
+{
+  "info": {
+    "name": "NBRB API",
+    "description": "Справочник валют НБРБ и курсы",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Supported currencies",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/exrates/currencies"
+      }
+    },
+    {
+      "name": "Rate today (BYN per {{charCode}})",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/exrates/rates/{{charCode}}?parammode=2&periodicity=0"
+      }
+    },
+    {
+      "name": "Rate on date (BYN per {{charCode}} on {{ondate}})",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/exrates/rates/{{charCode}}?parammode=2&periodicity=0&ondate={{ondate}}"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://api.nbrb.by"
+    },
+    {
+      "key": "charCode",
+      "value": "USD"
+    },
+    {
+      "key": "ondate",
+      "value": "2025-01-01"
+    }
+  ]
+}
