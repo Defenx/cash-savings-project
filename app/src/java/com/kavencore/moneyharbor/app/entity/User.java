@@ -38,11 +38,11 @@ public class User implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id")
     )
     @Builder.Default
-    private Set<Role> roles = new HashSet<>();
+    private List<Role> roles = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")
     @Builder.Default
-    private Set<Account> accounts = new HashSet<>();
+    private List<Account> accounts = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")
     @Builder.Default
@@ -54,18 +54,10 @@ public class User implements UserDetails {
     @UpdateTimestamp
     private OffsetDateTime updatedDate;
 
-
-    @PrePersist
-    @PreUpdate
-    void normalize() {
-        if (email != null) email = email.toLowerCase(Locale.ROOT);
-    }
-
     public void addRole(Role role) {
         if (role == null) return;
-        if (this.roles.add(role)) {
-            role.getUsers().add(this);
-        }
+        this.roles.add(role);
+        role.getUsers().add(this);
     }
 
     public void removeRole(Role role) {
