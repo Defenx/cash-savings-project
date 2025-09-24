@@ -15,6 +15,6 @@ public interface AccountMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "user", ignore = true)
+    @Mapping(target = "operations", ignore = true)
     Account toEntity(CreateAccountRequestDto req);
 }
-
