@@ -9,6 +9,7 @@ CREATE TABLE operations (
                             description TEXT,
                             amount NUMERIC(19,2) NOT NULL,
                             currency TEXT NOT NULL,
+                            category_id UUID NOT NULL,
                             PRIMARY KEY (id)
 );
 
@@ -16,4 +17,10 @@ ALTER TABLE operations
     ADD CONSTRAINT fk_operations_account
         FOREIGN KEY (account_id)
             REFERENCES accounts(id);
---rollback DROP TABLE operations
+
+ALTER TABLE operations
+    ADD CONSTRAINT fk_operations_category
+        FOREIGN KEY (category_id)
+            REFERENCES category(id);
+
+--rollback DROP TABLE operations;
