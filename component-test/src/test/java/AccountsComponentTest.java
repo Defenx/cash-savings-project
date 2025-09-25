@@ -60,8 +60,26 @@ class AccountsComponentTest extends BaseComponentTest {
 
         Account account = accountRepository.findById(id).orElseThrow();
 
-        assertThat(account.getTitle()).isEqualTo("USD_счет");
+        assertThat(account.getTitle()).isEqualTo("USD_счет_1");
         assertThat(account.getAmount()).isEqualByComparingTo("0.00");
+    }
+
+    @Test
+    @DisplayName("POST без title -> title = {currency}_счет_{number} в БД")
+    void createTitleInFirstAccount() throws Exception {
+        String json = AccountJson.CREATE_WITHOUT_TITLE.load();
+
+        MockHttpServletResponse response = performPostAuth(ACCOUNTS_PATH, json)
+                .andExpect(MockMvcResultMatchers.header().exists(HttpHeaders.LOCATION))
+                .andReturn().getResponse();
+
+        UUID id = TestUtils.extractIdFromLocation(response);
+
+        Account account = accountRepository.findById(id).orElseThrow();
+
+        assertThat(account.getTitle()).isEqualTo("USD_счет_1");
+        assertThat(account.getAmount()).isEqualByComparingTo("0.00");
+
     }
 
     @Test
@@ -97,6 +115,8 @@ class AccountsComponentTest extends BaseComponentTest {
 
         assertThat(newAccount).isPresent();
         assertThat(newAccount.get().getTitle()).isEqualTo("USD_счет_2");
+        assertThat(newAccount.get().getAmount()).isEqualByComparingTo("0.00");
+
     }
 
     @Test

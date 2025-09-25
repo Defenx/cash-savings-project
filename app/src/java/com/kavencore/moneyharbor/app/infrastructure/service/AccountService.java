@@ -55,7 +55,7 @@ public class AccountService {
 
     private void applyDefaults(Account acc) {
         if (acc.getTitle() == null) {
-            String titleQuery = acc.getCurrency().name() + "_счет_";
+            String titleQuery = acc.getCurrency().name() + TITLE_SUFFIX;
             long countUserNonsalaryAccounts = accountRepository.
                     countByUserAndCurrencyAndTitleStartingWith(
                     acc.getUser(),
