@@ -26,7 +26,7 @@ public class AccountService {
     private final UserRepository userRepository;
     private final AccountMapper accountMapper;
 
-    private static final String TITLE_SUFFIX = "_счет";
+    private static final String TITLE_SUFFIX = "_счет_";
 
     @Transactional
     public CreatedAccountResult createAccount(@Valid CreateAccountRequestDto dto, UUID userId) {
@@ -55,7 +55,15 @@ public class AccountService {
 
     private void applyDefaults(Account acc) {
         if (acc.getTitle() == null) {
-            acc.setTitle(acc.getCurrency().name() + TITLE_SUFFIX);
+            String titleQuery = acc.getCurrency().name() + TITLE_SUFFIX;
+            long countUserNonsalaryAccounts = accountRepository.
+                    countByUserAndCurrencyAndTitleStartingWith(
+                            acc.getUser(),
+                            acc.getCurrency(),
+                            titleQuery)
+                    + 1;
+
+            acc.setTitle(acc.getCurrency().name() + TITLE_SUFFIX + countUserNonsalaryAccounts);
         }
         if (acc.getAmount() == null) {
             acc.setAmount(BigDecimal.ZERO);
