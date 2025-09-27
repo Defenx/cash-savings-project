@@ -23,7 +23,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Entity
-@Table(name = "category", uniqueConstraints = {
+@Table(name = "categories", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"user_id", "name", "type"})
 })
 @Getter
