@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -23,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Transactional
 @DisplayName("Accounts API — component tests")
 class AccountsComponentTest extends BaseComponentTest {
 
@@ -76,33 +78,23 @@ class AccountsComponentTest extends BaseComponentTest {
     @DisplayName("POST /accounts: если есть счета {валюта_счёта}_1 в разных валютах, то новый USD-счет будет USD_счет_2")
     void createTitleInNewAccountForUserWhoHaveAccounts() throws Exception {
         User testUser = userRepository.findById(testUserId).orElseThrow();
-        Account testAccountUSD = new Account();
-        testAccountUSD.setUser(testUser);
-        testAccountUSD.setCurrency(Currency.USD);
-        testAccountUSD.setTitle("USD_счет_1");
-        testAccountUSD.setAmount(BigDecimal.ZERO);
-        accountRepository.saveAndFlush(testAccountUSD);
 
-        Account testAccountRUB = new Account();
-        testAccountRUB.setUser(testUser);
-        testAccountRUB.setCurrency(Currency.RUB);
-        testAccountRUB.setTitle("RUB_счет_1");
-        testAccountRUB.setAmount(BigDecimal.ZERO);
-        accountRepository.saveAndFlush(testAccountRUB);
+        String jsonUSD = AccountJson.CREATE_STANDARD_USD.load();
+        performPostAuth(ACCOUNTS_PATH, jsonUSD);
 
+        String jsonRUB = AccountJson.CREATE_STANDARD_RUB.load();
+        performPostAuth(ACCOUNTS_PATH, jsonRUB);
 
         String json = AccountJson.CREATE_WITHOUT_TITLE.load();
-
         performPostAuth(ACCOUNTS_PATH, json).andExpect(status().isCreated());
 
         List<Account> userAccounts =  accountRepository.findAllByUser(testUser);
-
-        assertThat(userAccounts).hasSize(3);
 
         Optional<Account> newAccount = userAccounts.stream()
                 .filter(a -> a.getTitle().equals("USD_счет_2"))
                 .findFirst();
 
+        assertThat(userAccounts).hasSize(3);
         assertThat(newAccount).isPresent();
         assertThat(newAccount.get().getTitle()).isEqualTo("USD_счет_2");
         assertThat(newAccount.get().getAmount()).isEqualByComparingTo("0.00");

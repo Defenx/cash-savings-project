@@ -19,9 +19,6 @@ subprojects {
 			// Это исправляет проблемы с кодировкой в консоли Windows
 			jvmArgs("-Dfile.encoding=UTF-8")
 
-			// Это заставляет тесты работать в одном процессе с Gradle,
-			// что решает ошибку "Could not find or load main class"
-			setForkEvery(0)
 		}
 	}
 	configurations.configureEach {

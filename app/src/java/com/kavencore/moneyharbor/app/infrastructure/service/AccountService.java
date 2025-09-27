@@ -16,6 +16,7 @@ import org.springframework.validation.annotation.Validated;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -55,15 +56,8 @@ public class AccountService {
 
     private void applyDefaults(Account acc) {
         if (acc.getTitle() == null) {
-            String titleQuery = acc.getCurrency().name() + TITLE_SUFFIX;
-            long countUserNonsalaryAccounts = accountRepository.
-                    countByUserAndCurrencyAndTitleStartingWith(
-                            acc.getUser(),
-                            acc.getCurrency(),
-                            titleQuery)
-                    + 1;
-
-            acc.setTitle(acc.getCurrency().name() + TITLE_SUFFIX + countUserNonsalaryAccounts);
+            long nextAccountNumber = calculateNextAccountNumber(acc);
+            acc.setTitle(acc.getCurrency().name() + TITLE_SUFFIX + nextAccountNumber);
         }
         if (acc.getAmount() == null) {
             acc.setAmount(BigDecimal.ZERO);
@@ -71,4 +65,16 @@ public class AccountService {
             acc.setAmount(acc.getAmount().setScale(2, RoundingMode.HALF_UP));
         }
     }
+
+    private long calculateNextAccountNumber(Account acc) {
+        String titleQuery = acc.getCurrency().name() + TITLE_SUFFIX;
+        long nextAccountNumber = accountRepository.findMaxAccountNumberThisCurrency(
+                acc.getUser().getId(),
+                acc.getCurrency().name(),
+                titleQuery
+        ).orElse(0L) + 1;
+        return nextAccountNumber;
+    }
+
+
 }
