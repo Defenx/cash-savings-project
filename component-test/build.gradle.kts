@@ -22,6 +22,7 @@ dependencies {
     testImplementation(libs.spring.boot.testcontainers)
     testImplementation(libs.testcontainers.junit)
     testImplementation(libs.testcontainers.postgresql)
+    testImplementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.2")
 
     testImplementation(project(":app"))
 

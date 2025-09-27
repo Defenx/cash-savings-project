@@ -15,6 +15,7 @@ import java.util.UUID;
 import static com.kavencore.moneyharbor.app.api.v1.controller.AccountsController.ACCOUNTS_PATH;
 import static com.kavencore.moneyharbor.app.api.v1.controller.AccountsController.ACCOUNTS_PATH_WITH_SLASH;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -178,7 +179,7 @@ class AccountsComponentTest extends BaseComponentTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.errors[0]").value(org.hamcrest.Matchers.containsString("currency")));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.errors[0]").value(containsString("currency")));
     }
 
     @Test
@@ -194,7 +195,7 @@ class AccountsComponentTest extends BaseComponentTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.errors[0]").value(org.hamcrest.Matchers.containsString("amount")));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.errors[0]").value(containsString("amount")));
     }
 
     @Test
@@ -210,7 +211,7 @@ class AccountsComponentTest extends BaseComponentTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.errors[0]").value(org.hamcrest.Matchers.containsString("amount")));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.errors[0]").value(containsString("amount")));
     }
 
     @Test
@@ -237,5 +238,35 @@ class AccountsComponentTest extends BaseComponentTest {
         performPostNoAuth(ACCOUNTS_PATH, json)
                 .andExpect(status().isUnauthorized())
                 .andExpect(MockMvcResultMatchers.header().doesNotExist(HttpHeaders.LOCATION));
+    }
+
+    @Test
+    @DisplayName("POST: title максимальной длины из OpenAPI -> 201")
+    void createAccount_WhenTitleMaxLengthFromOpenApi_ShouldSucceed() throws Exception {
+        int maxLength = OpenApiReader.getTitleMaxLength();
+        String validTitle = OpenApiReader.generateTitleOfLength(maxLength);
+
+        String json = String.format(AccountJson.CREATE_TITLE_VALIDATE_LENGTH.load(), validTitle);
+
+        MockHttpServletResponse response = performPostAuth(ACCOUNTS_PATH, json)
+                .andExpect(status().isCreated())
+                .andReturn().getResponse();
+
+        UUID id = TestUtils.extractIdFromLocation(response);
+        Account account = accountRepository.findById(id).orElseThrow();
+        assertThat(account.getTitle()).hasSize(maxLength);
+    }
+
+    @Test
+    @DisplayName("POST с title превышающим максимум из OpenAPI -> 400")
+    void createAccount_WhenTitleExceedsMaxLengthFromOpenApi_ShouldFail() throws Exception {
+        int maxLength = OpenApiReader.getTitleMaxLength();
+        String invalidTitle = OpenApiReader.generateTitleOfLength(maxLength + 1);
+
+        String json = String.format(AccountJson.CREATE_TITLE_VALIDATE_LENGTH.load(), invalidTitle);
+
+        performPostAuth(ACCOUNTS_PATH, json)
+                .andExpect(status().isBadRequest())
+                .andReturn();
     }
 }
