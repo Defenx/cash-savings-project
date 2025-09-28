@@ -1,8 +1,6 @@
 import com.kavencore.moneyharbor.app.entity.Account;
-import com.kavencore.moneyharbor.app.entity.Currency;
 import com.kavencore.moneyharbor.app.entity.User;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
@@ -13,7 +11,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,12 +24,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 @DisplayName("Accounts API — component tests")
 class AccountsComponentTest extends BaseComponentTest {
-
-    @AfterEach
-    void tearDown() {
-        accountRepository.deleteAll();
-    }
-
 
     @Test
     @DisplayName("Post /accounts - 201, атрибуты сохранены в базе")
@@ -85,6 +76,9 @@ class AccountsComponentTest extends BaseComponentTest {
         String jsonRUB = AccountJson.CREATE_STANDARD_RUB.load();
         performPostAuth(ACCOUNTS_PATH, jsonRUB);
 
+        String jsonRUB2 = AccountJson.CREATE_STANDARD_RUB.load();
+        performPostAuth(ACCOUNTS_PATH, jsonRUB2);
+
         String json = AccountJson.CREATE_WITHOUT_TITLE.load();
         performPostAuth(ACCOUNTS_PATH, json).andExpect(status().isCreated());
 
@@ -94,7 +88,7 @@ class AccountsComponentTest extends BaseComponentTest {
                 .filter(a -> a.getTitle().equals("USD_счет_2"))
                 .findFirst();
 
-        assertThat(userAccounts).hasSize(3);
+        assertThat(userAccounts).hasSize(4);
         assertThat(newAccount).isPresent();
         assertThat(newAccount.get().getTitle()).isEqualTo("USD_счет_2");
         assertThat(newAccount.get().getAmount()).isEqualByComparingTo("0.00");

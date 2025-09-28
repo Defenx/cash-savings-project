@@ -16,6 +16,7 @@ import org.springframework.validation.annotation.Validated;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -68,11 +69,18 @@ public class AccountService {
 
     private long calculateNextAccountNumber(Account acc) {
         String titleQuery = acc.getCurrency().name() + TITLE_SUFFIX;
-        long nextAccountNumber = accountRepository.findMaxAccountNumberThisCurrency(
+
+        List<Account> usersAccWithThisCurrency = accountRepository.findByUserIdAndCurrency(
                 acc.getUser().getId(),
-                acc.getCurrency().name(),
-                titleQuery
-        ).orElse(0L) + 1;
+                acc.getCurrency()
+        );
+        long nextAccountNumber = usersAccWithThisCurrency.stream()
+                .map(Account::getTitle)
+                .filter(title -> title.startsWith(titleQuery))
+                .map(title -> title.substring(titleQuery.length()))
+                .mapToLong(Long::parseLong)
+                .max()
+                .orElse(0L) + 1;
         return nextAccountNumber;
     }
 
