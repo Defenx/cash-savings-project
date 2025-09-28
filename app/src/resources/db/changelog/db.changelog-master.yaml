@@ -7,11 +7,8 @@ databaseChangeLog:
                relativeToChangelogFile: true }
   - include: { file: 004-init-category.sql,
                  relativeToChangelogFile: true }
-  - include: { file: 005-rename-category-to-categories.sql,
+  - include: { file: 005-update-operations-with-category.sql,
                relativeToChangelogFile: true }
-  - include: { file: 006-add-category-id-column-to-operations.sql,
-               relativeToChangelogFile: true }
-  - include: { file: 007-add-index-account-to-operations.sql,
-               relativeToChangelogFile: true }
+
 
 

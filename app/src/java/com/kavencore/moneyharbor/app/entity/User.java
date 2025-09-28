@@ -46,7 +46,7 @@ public class User implements UserDetails {
 
     @OneToMany(mappedBy = "user")
     @Builder.Default
-    private Set<Category> categories = new HashSet<>();
+    private List<Category> categories = new ArrayList<>();
 
     @CreationTimestamp
     private OffsetDateTime createdDate;
