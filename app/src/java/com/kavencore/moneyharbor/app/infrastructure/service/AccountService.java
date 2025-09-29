@@ -16,6 +16,8 @@ import org.springframework.validation.annotation.Validated;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -26,7 +28,7 @@ public class AccountService {
     private final UserRepository userRepository;
     private final AccountMapper accountMapper;
 
-    private static final String TITLE_SUFFIX = "_счет";
+    private static final String TITLE_SUFFIX = "_счет_";
 
     @Transactional
     public CreatedAccountResult createAccount(@Valid CreateAccountRequestDto dto, UUID userId) {
@@ -55,7 +57,8 @@ public class AccountService {
 
     private void applyDefaults(Account acc) {
         if (acc.getTitle() == null) {
-            acc.setTitle(acc.getCurrency().name() + TITLE_SUFFIX);
+            long nextAccountNumber = calculateNextAccountNumber(acc);
+            acc.setTitle(acc.getCurrency().name() + TITLE_SUFFIX + nextAccountNumber);
         }
         if (acc.getAmount() == null) {
             acc.setAmount(BigDecimal.ZERO);
@@ -63,4 +66,23 @@ public class AccountService {
             acc.setAmount(acc.getAmount().setScale(2, RoundingMode.HALF_UP));
         }
     }
+
+    private long calculateNextAccountNumber(Account acc) {
+        String titleQuery = acc.getCurrency().name() + TITLE_SUFFIX;
+
+        List<Account> usersAccWithThisCurrency = accountRepository.findByUserIdAndCurrency(
+                acc.getUser().getId(),
+                acc.getCurrency()
+        );
+        long nextAccountNumber = usersAccWithThisCurrency.stream()
+                .map(Account::getTitle)
+                .filter(title -> title.startsWith(titleQuery))
+                .map(title -> title.substring(titleQuery.length()))
+                .mapToLong(Long::parseLong)
+                .max()
+                .orElse(0L) + 1;
+        return nextAccountNumber;
+    }
+
+
 }
