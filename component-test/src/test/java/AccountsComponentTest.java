@@ -22,7 +22,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("Accounts API — component tests")
 class AccountsComponentTest extends BaseComponentTest {
 
-
     @Test
     @DisplayName("Post /accounts - 201, атрибуты сохранены в базе")
     void createOkMapping() throws Exception {
@@ -57,7 +56,6 @@ class AccountsComponentTest extends BaseComponentTest {
         UUID id = TestUtils.extractIdFromLocation(response);
 
         Account account = accountRepository.findById(id).orElseThrow();
-
         assertThat(account.getTitle()).isEqualTo("USD_счет");
         assertThat(account.getAmount()).isEqualByComparingTo("0.00");
     }
@@ -265,8 +263,15 @@ class AccountsComponentTest extends BaseComponentTest {
 
         String json = String.format(AccountJson.CREATE_TITLE_VALIDATE_LENGTH.load(), invalidTitle);
 
-        performPostAuth(ACCOUNTS_PATH, json)
+        mvc.perform(MockMvcRequestBuilders.post(ACCOUNTS_PATH)
+                        .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .accept(MediaType.APPLICATION_PROBLEM_JSON_VALUE)
+                        .content(json))
                 .andExpect(status().isBadRequest())
-                .andReturn();
+                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.errors[0]").value("title: size must be between 0 and 50"));
     }
+
 }
