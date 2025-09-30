@@ -13,7 +13,13 @@ subprojects {
 		the<JavaPluginExtension>().toolchain {
 			languageVersion.set(JavaLanguageVersion.of(libs.versions.java.get()))
 		}
-		tasks.withType<Test>().configureEach { useJUnitPlatform() }
+		tasks.withType<Test>().configureEach {
+			useJUnitPlatform()
+
+			// Это исправляет проблемы с кодировкой в консоли Windows
+			jvmArgs("-Dfile.encoding=UTF-8")
+
+		}
 	}
 	configurations.configureEach {
 		resolutionStrategy.force(libs.commons.compress)
