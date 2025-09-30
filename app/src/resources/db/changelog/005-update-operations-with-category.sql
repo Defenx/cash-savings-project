@@ -9,8 +9,8 @@ ALTER TABLE category RENAME TO categories;
 --changeset svtsygankov:3
 --comment: добавление колонки category_id в таблицу operations
 
-ALTER TABLE operations
-    ADD COLUMN category_id UUID NOT NULL;
+--ALTER TABLE operations
+--    ADD COLUMN category_id UUID NOT NULL;
 
 --rollback ALTER TABLE operations DROP COLUMN IF EXISTS category_id;
 

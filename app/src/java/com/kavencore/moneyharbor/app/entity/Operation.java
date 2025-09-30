@@ -1,6 +1,7 @@
 package com.kavencore.moneyharbor.app.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.proxy.HibernateProxy;
@@ -27,24 +28,34 @@ public class Operation {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @NotNull
     private Account account;
 
     @ToString.Include
+    @Column(nullable = false)
+    @NotNull
     private LocalDate date;
 
     @CreationTimestamp
+    @Column(nullable = false)
+    @NotNull
     private OffsetDateTime createdDate;
 
     private String description;
 
     @ToString.Include
+    @Column(nullable = false)
+    @NotNull
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
     @ToString.Include
+    @Column(nullable = false)
+    @NotNull
     private Currency currency;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @NotNull
     private Category category;
 
     @Override
