@@ -37,13 +37,16 @@ public class User implements UserDetails {
             joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id")
     )
-
     @Builder.Default
     private List<Role> roles = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")
     @Builder.Default
     private List<Account> accounts = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user")
+    @Builder.Default
+    private List<Category> categories = new ArrayList<>();
 
     @CreationTimestamp
     private OffsetDateTime createdDate;
@@ -77,6 +80,23 @@ public class User implements UserDetails {
         if (this.accounts.remove(account)) {
             if (account.getUser() == this) {
                 account.setUser(null);
+            }
+        }
+    }
+
+    public void addCategory(Category category) {
+        if (category == null) return;
+        if (!this.equals(category.getUser())) {
+            this.categories.add(category);
+            category.setUser(this);
+        }
+    }
+
+    public void removeCategory(Category category) {
+        if (category == null) return;
+        if (this.categories.remove(category)) {
+            if (category.getUser() == this) {
+                category.setUser(null);
             }
         }
     }

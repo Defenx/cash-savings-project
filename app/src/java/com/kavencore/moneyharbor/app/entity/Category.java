@@ -1,25 +1,35 @@
 package com.kavencore.moneyharbor.app.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.proxy.HibernateProxy;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
 @Entity
-@Table(name = "operations")
+@Table(name = "categories")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(onlyExplicitlyIncluded = true)
-public class Operation {
+public class Category {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -27,25 +37,16 @@ public class Operation {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    private Account account;
+    private User user;
 
     @ToString.Include
-    private LocalDate date;
-
-    @CreationTimestamp
-    private OffsetDateTime createdDate;
-
-    private String description;
-
-    @ToString.Include
-    private BigDecimal amount;
+    @Column(nullable = false)
+    private String name;
 
     @Enumerated(EnumType.STRING)
     @ToString.Include
-    private Currency currency;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    private Category category;
+    @Column(nullable = false)
+    private Type type;
 
     @Override
     public final boolean equals(Object o) {
@@ -54,8 +55,8 @@ public class Operation {
         Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
         Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;
-        Operation operation = (Operation) o;
-        return getId() != null && Objects.equals(getId(), operation.getId());
+        Category category = (Category) o;
+        return getId() != null && Objects.equals(getId(), category.getId());
     }
 
     @Override
