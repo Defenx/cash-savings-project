@@ -18,6 +18,7 @@ import java.util.UUID;
 import static com.kavencore.moneyharbor.app.api.v1.controller.AccountsController.ACCOUNTS_PATH;
 import static com.kavencore.moneyharbor.app.api.v1.controller.AccountsController.ACCOUNTS_PATH_WITH_SLASH;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -272,4 +273,41 @@ class AccountsComponentTest extends BaseComponentTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(MockMvcResultMatchers.header().doesNotExist(HttpHeaders.LOCATION));
     }
+
+    @Test
+    @DisplayName("POST: title максимальной длины из OpenAPI -> 201")
+    void createAccount_WhenTitleMaxLengthFromOpenApi_ShouldSucceed() throws Exception {
+        int maxLength = OpenApiReader.getTitleMaxLength();
+        String validTitle = OpenApiReader.generateTitleOfLength(maxLength);
+
+        String json = String.format(AccountJson.CREATE_TITLE_VALIDATE_LENGTH.load(), validTitle);
+
+        MockHttpServletResponse response = performPostAuth(ACCOUNTS_PATH, json)
+                .andExpect(status().isCreated())
+                .andReturn().getResponse();
+
+        UUID id = TestUtils.extractIdFromLocation(response);
+        Account account = accountRepository.findById(id).orElseThrow();
+        assertThat(account.getTitle()).hasSize(maxLength);
+    }
+
+    @Test
+    @DisplayName("POST с title превышающим максимум из OpenAPI -> 400")
+    void createAccount_WhenTitleExceedsMaxLengthFromOpenApi_ShouldFail() throws Exception {
+        int maxLength = OpenApiReader.getTitleMaxLength();
+        String invalidTitle = OpenApiReader.generateTitleOfLength(maxLength + 1);
+
+        String json = String.format(AccountJson.CREATE_TITLE_VALIDATE_LENGTH.load(), invalidTitle);
+
+        mvc.perform(MockMvcRequestBuilders.post(ACCOUNTS_PATH)
+                        .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .accept(MediaType.APPLICATION_PROBLEM_JSON_VALUE)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.errors[0]").value("title: size must be between 0 and 50"));
+    }
+
 }
