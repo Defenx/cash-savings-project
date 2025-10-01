@@ -7,6 +7,7 @@ servers:
 tags:
   - name: Accounts
   - name: User
+  - name: Categories
 
 security:
   - BasicAuth: [ ]
@@ -168,6 +169,37 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/UserProfileResponse' }
+
+  /categories:
+    post:
+      tags: [ Categories ]
+      summary: Create category
+      description: |
+        Создаёт новую категорию. Требует аутентификации.
+        `user_id` проставляется автоматически из контекста.
+      operationId: createCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateCategoryRequest' }
+      responses:
+        '201':
+          description: Created
+          headers:
+            Location:
+              description: URL созданной категории
+              schema: { type: string, format: uri }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CategoryResponse' }
+        '400':
+          description: Bad Request (RFC 9457 Problem Details)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
 
 components:
   securitySchemes:
@@ -347,3 +379,36 @@ components:
         email:
           type: string
           format: email
+
+    CreateCategoryRequest:
+      type: object
+      required: [ name, type ]
+      properties:
+        name:
+          type: string
+          description: Название категории
+          example: "Зарплата"
+        type:
+          type: string
+          enum: [ INCOME, EXPENSE ]
+          description: Тип категории
+          example: INCOME
+
+    CategoryResponse:
+      type: object
+      required: [ id, name, type ]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Уникальный идентификатор категории
+          example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+        name:
+          type: string
+          description: Название категории
+          example: "Зарплата"
+        type:
+          type: string
+          enum: [ INCOME, EXPENSE ]
+          description: Тип категории
+          example: INCOME
