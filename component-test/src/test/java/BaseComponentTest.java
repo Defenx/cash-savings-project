@@ -78,5 +78,11 @@ public abstract class BaseComponentTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .accept(MediaType.APPLICATION_JSON_VALUE));
     }
+
+    protected ResultActions performGetNoAuth(String path) throws Exception {
+        return mvc.perform(MockMvcRequestBuilders.get(path)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON_VALUE));
+    }
 }
 
