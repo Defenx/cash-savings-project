@@ -1,29 +1,47 @@
-import com.kavencore.moneyharbor.app.entity.Account;
-import com.kavencore.moneyharbor.app.entity.User;
+import com.jayway.jsonpath.JsonPath;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import static com.kavencore.moneyharbor.app.api.v1.controller.AccountsController.ACCOUNTS_PATH;
 import static com.kavencore.moneyharbor.app.api.v1.controller.AccountsController.ACCOUNTS_PATH_WITH_SLASH;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
+import static com.kavencore.moneyharbor.app.api.v1.controller.UserController.GET_PROFILE_PATH;
+import static com.kavencore.moneyharbor.app.api.v1.controller.UserController.SIGN_UP_PATH;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Transactional
 @DisplayName("Accounts API — component tests")
 class AccountsComponentTest extends BaseComponentTest {
+
+    @BeforeEach
+    void ensureTestUser() throws Exception {
+        String signUpJson = UserJson.TEST_USER.load();
+
+        MockHttpServletResponse resp = performPostNoAuth(SIGN_UP_PATH, signUpJson)
+                .andReturn().getResponse();
+
+        if (resp.getStatus() == HttpStatus.CONFLICT.value()) {
+            MockHttpServletResponse profileResp = performGetAuth(GET_PROFILE_PATH)
+                    .andExpect(status().isOk())
+                    .andReturn().getResponse();
+
+            testUserId = UUID.fromString(JsonPath.read(profileResp.getContentAsString(), "$.id"));
+        } else {
+            String location = resp.getHeader(HttpHeaders.LOCATION);
+            testUserId = UUID.fromString(location.substring(location.lastIndexOf('/') + "/".length()));
+        }
+    }
+
 
     @Test
     @DisplayName("Post /accounts - 201, атрибуты сохранены в базе")
@@ -40,11 +58,11 @@ class AccountsComponentTest extends BaseComponentTest {
 
         UUID id = TestUtils.extractIdFromLocation(response);
 
-        Optional<Account> saved = accountRepository.findById(id);
-        Assertions.assertThat(saved).isPresent();
-        assertThat(saved.get().getTitle()).isEqualTo("Зарплатный");
-        assertThat(saved.get().getCurrency().name()).isEqualTo("RUB");
-        assertThat(saved.get().getAmount()).isEqualByComparingTo("1500.50");
+        ResultActions resultActions = performGetAuth(ACCOUNTS_PATH_WITH_SLASH + id);
+        resultActions.andExpect(status().isOk());
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.title").value("Зарплатный"));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.currency").value("RUB"));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.amount").value(1500.50));
     }
 
     @Test
@@ -58,40 +76,43 @@ class AccountsComponentTest extends BaseComponentTest {
 
         UUID id = TestUtils.extractIdFromLocation(response);
 
-        Account account = accountRepository.findById(id).orElseThrow();
+        ResultActions resultActions = performGetAuth(ACCOUNTS_PATH_WITH_SLASH + id);
 
-        assertThat(account.getTitle()).isEqualTo("USD_счет_1");
-        assertThat(account.getAmount()).isEqualByComparingTo("0.00");
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.title").value("USD_счет_1"));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.currency").value("USD"));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.amount").value(0.00));
 
     }
 
     @Test
     @DisplayName("POST /accounts: если есть счета {валюта_счёта}_1 в разных валютах, то новый USD-счет будет USD_счет_2")
     void createTitleInNewAccountForUserWhoHaveAccounts() throws Exception {
-        User testUser = userRepository.findById(testUserId).orElseThrow();
 
-        String jsonUSD = AccountJson.CREATE_STANDARD_USD.load();
-        performPostAuth(ACCOUNTS_PATH, jsonUSD);
+        performPostAuth(ACCOUNTS_PATH, AccountJson.CREATE_STANDARD_USD.load())
+                .andExpect(status().isCreated())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("USD_счет_1"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.currency").value("USD"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.amount").value(0.00));
 
-        String jsonRUB = AccountJson.CREATE_STANDARD_RUB.load();
-        performPostAuth(ACCOUNTS_PATH, jsonRUB);
 
-        String jsonRUB2 = AccountJson.CREATE_STANDARD_RUB.load();
-        performPostAuth(ACCOUNTS_PATH, jsonRUB2);
+        performPostAuth(ACCOUNTS_PATH, AccountJson.CREATE_STANDARD_RUB.load())
+                .andExpect(status().isCreated())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("RUB_счет_1"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.currency").value("RUB"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.amount").value(0.00));
 
-        String json = AccountJson.CREATE_WITHOUT_TITLE.load();
-        performPostAuth(ACCOUNTS_PATH, json).andExpect(status().isCreated());
+        performPostAuth(ACCOUNTS_PATH, AccountJson.CREATE_STANDARD_RUB.load())
+                .andExpect(status().isCreated())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("RUB_счет_1"))
+                // TODO: проанализировать возможность добавить ограничение на одинаковые названия счета у одного пользователя
+                .andExpect(MockMvcResultMatchers.jsonPath("$.currency").value("RUB"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.amount").value(0.00));
 
-        List<Account> userAccounts =  accountRepository.findAllByUser(testUser);
-
-        Optional<Account> newAccount = userAccounts.stream()
-                .filter(a -> a.getTitle().equals("USD_счет_2"))
-                .findFirst();
-
-        assertThat(userAccounts).hasSize(4);
-        assertThat(newAccount).isPresent();
-        assertThat(newAccount.get().getTitle()).isEqualTo("USD_счет_2");
-        assertThat(newAccount.get().getAmount()).isEqualByComparingTo("0.00");
+        performPostAuth(ACCOUNTS_PATH, AccountJson.CREATE_WITHOUT_TITLE.load())
+                .andExpect(status().isCreated())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("USD_счет_2"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.currency").value("USD"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.amount").value(0.00));
 
     }
 
@@ -113,7 +134,8 @@ class AccountsComponentTest extends BaseComponentTest {
                     }
                 });
 
-        assertThat(accountRepository.findById(id)).isEmpty();
+        performGetAuth(ACCOUNTS_PATH_WITH_SLASH + id)
+                .andExpect(status().isNotFound());
     }
 
 
@@ -121,7 +143,8 @@ class AccountsComponentTest extends BaseComponentTest {
     @DisplayName("DELETE несуществующего -> 200 (идемпотентно)")
     void deleteAbsent200() throws Exception {
         UUID randomId = UUID.randomUUID();
-        assertThat(accountRepository.existsById(randomId)).isFalse();
+        performGetAuth(ACCOUNTS_PATH_WITH_SLASH + randomId)
+                .andExpect(status().isNotFound());
 
         performDeleteAuthOk(ACCOUNTS_PATH_WITH_SLASH + randomId)
                 .andExpect(result -> Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(200));
@@ -131,26 +154,19 @@ class AccountsComponentTest extends BaseComponentTest {
     @DisplayName("GET несуществующего -> 404 ProblemDetail")
     void getAbsent404() throws Exception {
         UUID missing = UUID.randomUUID();
-        mvc.perform(MockMvcRequestBuilders
-                        .get(ACCOUNTS_PATH_WITH_SLASH + missing)
-                        .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
-                        .accept(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+        performGetAuth(ACCOUNTS_PATH_WITH_SLASH + missing)
                 .andExpect(status().isNotFound())
                 .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.NOT_FOUND.getReasonPhrase()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.detail").value("Account not found: " + missing));
     }
+
     @Test
     @DisplayName("POST с невалидным телом (неизвестный enum) -> 400 ProblemDetail")
     void postInvalidJson400() throws Exception {
         String badJson = AccountJson.CREATE_INVALID_ENUM.load();
 
-        mvc.perform(MockMvcRequestBuilders
-                        .post(ACCOUNTS_PATH)
-                        .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
-                        .contentType(MediaType.APPLICATION_JSON_VALUE)
-                        .accept(MediaType.APPLICATION_PROBLEM_JSON_VALUE)
-                        .content(badJson))
+        performPostAuth(ACCOUNTS_PATH, badJson)
                 .andExpect(status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
@@ -160,10 +176,7 @@ class AccountsComponentTest extends BaseComponentTest {
     @Test
     @DisplayName("GET /accounts/{id} с невалидным UUID -> 400 ProblemDetail")
     void getInvalidUuid400() throws Exception {
-        mvc.perform(MockMvcRequestBuilders
-                        .get(ACCOUNTS_PATH_WITH_SLASH + "abc")
-                        .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
-                        .accept(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+        performGetAuth(ACCOUNTS_PATH_WITH_SLASH + "abc")
                 .andExpect(status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
@@ -173,10 +186,7 @@ class AccountsComponentTest extends BaseComponentTest {
     @Test
     @DisplayName("DELETE /accounts/{id} с невалидным UUID -> 400 ProblemDetail")
     void deleteInvalidUuid400() throws Exception {
-        mvc.perform(MockMvcRequestBuilders
-                        .get(ACCOUNTS_PATH_WITH_SLASH + "abc")
-                        .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
-                        .accept(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+        performDeleteAuthOk(ACCOUNTS_PATH_WITH_SLASH + "abc")
                 .andExpect(status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
@@ -188,11 +198,7 @@ class AccountsComponentTest extends BaseComponentTest {
     void postCurrencyNotInEnum400() throws Exception {
         String json = AccountJson.CREATE_WITH_CURRENCY_NOT_IN_ENUM.load();
 
-        mvc.perform(MockMvcRequestBuilders.post(ACCOUNTS_PATH)
-                        .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
-                        .contentType(MediaType.APPLICATION_JSON_VALUE)
-                        .accept(MediaType.APPLICATION_PROBLEM_JSON_VALUE)
-                        .content(json))
+        performPostAuth(ACCOUNTS_PATH, json)
                 .andExpect(status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
@@ -204,11 +210,7 @@ class AccountsComponentTest extends BaseComponentTest {
     void postMissingCurrency400() throws Exception {
         String json = AccountJson.CREATE_MISSING_CURRENCY.load();
 
-        mvc.perform(MockMvcRequestBuilders.post(ACCOUNTS_PATH)
-                        .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
-                        .contentType(MediaType.APPLICATION_JSON_VALUE)
-                        .accept(MediaType.APPLICATION_PROBLEM_JSON_VALUE)
-                        .content(json))
+        performPostAuth(ACCOUNTS_PATH, json)
                 .andExpect(status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
@@ -220,11 +222,7 @@ class AccountsComponentTest extends BaseComponentTest {
     void postAmountScale3_400() throws Exception {
         String json = AccountJson.CREATE_AMOUNT_SCALE_3.load();
 
-        mvc.perform(MockMvcRequestBuilders.post(ACCOUNTS_PATH)
-                        .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
-                        .contentType(MediaType.APPLICATION_JSON_VALUE)
-                        .accept(MediaType.APPLICATION_PROBLEM_JSON_VALUE)
-                        .content(json))
+        performPostAuth(ACCOUNTS_PATH, json)
                 .andExpect(status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
@@ -236,11 +234,7 @@ class AccountsComponentTest extends BaseComponentTest {
     void postAmountIntegerTooLong400() throws Exception {
         String json = AccountJson.CREATE_AMOUNT_INTEGER_TOO_LONG.load();
 
-        mvc.perform(MockMvcRequestBuilders.post(ACCOUNTS_PATH)
-                        .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
-                        .contentType(MediaType.APPLICATION_JSON_VALUE)
-                        .accept(MediaType.APPLICATION_PROBLEM_JSON_VALUE)
-                        .content(json))
+        performPostAuth(ACCOUNTS_PATH, json)
                 .andExpect(status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
@@ -252,11 +246,7 @@ class AccountsComponentTest extends BaseComponentTest {
     void postTitleWrongType400() throws Exception {
         String json = AccountJson.CREATE_TITLE_WRONG_TYPE.load();
 
-        mvc.perform(MockMvcRequestBuilders.post(ACCOUNTS_PATH)
-                        .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
-                        .contentType(MediaType.APPLICATION_JSON_VALUE)
-                        .accept(MediaType.APPLICATION_PROBLEM_JSON_VALUE)
-                        .content(json))
+        performPostAuth(ACCOUNTS_PATH, json)
                 .andExpect(status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
