@@ -32,25 +32,21 @@ public class Operation {
     private Account account;
 
     @ToString.Include
-    @Column(nullable = false)
     @NotNull
     private LocalDate date;
 
     @CreationTimestamp
-    @Column(nullable = false)
     @NotNull
     private OffsetDateTime createdDate;
 
     private String description;
 
     @ToString.Include
-    @Column(nullable = false)
     @NotNull
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
     @ToString.Include
-    @Column(nullable = false)
     @NotNull
     private Currency currency;
 

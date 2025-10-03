@@ -9,7 +9,6 @@ CREATE TABLE operations (
                             description TEXT,
                             amount NUMERIC(19,2) NOT NULL,
                             currency TEXT NOT NULL,
-                            category_id UUID NOT NULL,
                             PRIMARY KEY (id)
 );
 
