@@ -1,10 +1,13 @@
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kavencore.moneyharbor.MoneyHarborApplication;
 import com.kavencore.moneyharbor.app.api.model.UserSignUpRequestDto;
 import com.kavencore.moneyharbor.app.api.v1.dto.SignUpResult;
 import com.kavencore.moneyharbor.app.infrastructure.exception.EmailTakenException;
 import com.kavencore.moneyharbor.app.infrastructure.repository.AccountRepository;
+import com.kavencore.moneyharbor.app.infrastructure.repository.CategoryRepository;
 import com.kavencore.moneyharbor.app.infrastructure.repository.RoleRepository;
 import com.kavencore.moneyharbor.app.infrastructure.repository.UserRepository;
+import com.kavencore.moneyharbor.app.infrastructure.service.CategoryService;
 import com.kavencore.moneyharbor.app.infrastructure.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +41,10 @@ public abstract class BaseComponentTest {
     protected PasswordEncoder passwordEncoder;
     @Autowired
     protected RoleRepository roleRepository;
+    @Autowired
+    protected CategoryRepository categoryRepository;
+    @Autowired
+    protected ObjectMapper objectMapper;
 
     protected static final String ACCOUNT_TEST_EMAIL = "test.user@example.com";
     protected static final String USER_TEST_EMAIL = "alice@example.com";
