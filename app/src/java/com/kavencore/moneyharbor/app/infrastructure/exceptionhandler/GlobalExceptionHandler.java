@@ -1,8 +1,6 @@
 package com.kavencore.moneyharbor.app.infrastructure.exceptionhandler;
 
-import com.kavencore.moneyharbor.app.infrastructure.exception.AccountNotFoundException;
-import com.kavencore.moneyharbor.app.infrastructure.exception.EmailTakenException;
-import com.kavencore.moneyharbor.app.infrastructure.exception.MissingRoleException;
+import com.kavencore.moneyharbor.app.infrastructure.exception.*;
 import com.kavencore.moneyharbor.app.infrastructure.logging.HttpErrorLogger;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
@@ -109,6 +107,22 @@ public class GlobalExceptionHandler {
             errorLogger.logServerError(req, status, ex, null);
         }
         return ResponseEntity.status(ex.getStatusCode()).body(pd);
+    }
+
+    @ExceptionHandler(CategoryNotFoundException.class)
+    public ResponseEntity<ProblemDetail> handleCategoryNotFound(CategoryNotFoundException ex, HttpServletRequest req) {
+        ProblemDetail pd = getProblemDetail(req, HttpStatus.NOT_FOUND);
+        pd.setDetail("Category not found: " + ex.getCategoryId());
+        errorLogger.logClientError(req, HttpStatus.NOT_FOUND.value(), ex, ex.getCategoryId().toString());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(pd);
+    }
+
+    @ExceptionHandler(InvalidOperationAmountException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidOperationAmount(InvalidOperationAmountException ex, HttpServletRequest req) {
+        ProblemDetail pd = getProblemDetail(req, HttpStatus.BAD_REQUEST);
+        pd.setDetail(ex.getMessage());
+        errorLogger.logClientError(req, HttpStatus.BAD_REQUEST.value(), ex, ex.getMessage());
+        return ResponseEntity.badRequest().body(pd);
     }
 
     private ProblemDetail getProblemDetail(HttpServletRequest req, HttpStatus status) {

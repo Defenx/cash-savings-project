@@ -59,12 +59,14 @@ public class Account {
                 ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode()
                 : getClass().hashCode();
     }
-
     public void addOperation(Operation operation) {
-        if (operation == null) return;
-        if (!this.equals(operation.getAccount())) {
-            this.operations.add(operation);
-            operation.setAccount(this);
+        if (operation == null) {
+            return;
         }
+        operation.attachAccount(this);
+        if (amount == null) {
+            amount = BigDecimal.ZERO;
+        }
+        amount = amount.add(operation.getAmount());
     }
 }
