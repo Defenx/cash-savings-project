@@ -1,13 +1,10 @@
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.kavencore.moneyharbor.MoneyHarborApplication;
 import com.kavencore.moneyharbor.app.api.model.UserSignUpRequestDto;
 import com.kavencore.moneyharbor.app.api.v1.dto.SignUpResult;
 import com.kavencore.moneyharbor.app.infrastructure.exception.EmailTakenException;
-import com.kavencore.moneyharbor.app.infrastructure.repository.AccountRepository;
-import com.kavencore.moneyharbor.app.infrastructure.repository.CategoryRepository;
-import com.kavencore.moneyharbor.app.infrastructure.repository.RoleRepository;
-import com.kavencore.moneyharbor.app.infrastructure.repository.UserRepository;
-import com.kavencore.moneyharbor.app.infrastructure.service.CategoryService;
+import com.kavencore.moneyharbor.app.infrastructure.repository.*;
 import com.kavencore.moneyharbor.app.infrastructure.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +18,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.testcontainers.containers.PostgreSQLContainer;
 
+import java.util.Map;
 import java.util.UUID;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
@@ -44,12 +42,14 @@ public abstract class BaseComponentTest {
     @Autowired
     protected CategoryRepository categoryRepository;
     @Autowired
+    protected OperationRepository operationRepository;
+
+    @Autowired
     protected ObjectMapper objectMapper;
 
     protected static final String ACCOUNT_TEST_EMAIL = "test.user@example.com";
     protected static final String USER_TEST_EMAIL = "alice@example.com";
     protected static final String TEST_PASSWORD = "Abcdefg1";
-    protected static final String EMPTY_JSON_BODY = "{}";
     protected UUID testUserId;
 
 
@@ -104,6 +104,28 @@ public abstract class BaseComponentTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .accept(MediaType.APPLICATION_PROBLEM_JSON_VALUE)
                 .content(json));
+    }
+
+    protected ResultActions postAuthExpectProblem(String path, String json) throws Exception {
+        return mvc.perform(MockMvcRequestBuilders.post(path)
+                .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_PROBLEM_JSON_VALUE)
+                .content(json));
+    }
+
+    protected ResultActions performPostAuthAs(String email, String password, String path, String json) throws Exception {
+        return mvc.perform(MockMvcRequestBuilders.post(path)
+                .with(httpBasic(email, password))
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON_VALUE)
+                .content(json));
+    }
+
+    protected String patchJson(String template, Map<String, String> replacements) throws Exception {
+        ObjectNode node = (ObjectNode) objectMapper.readTree(template);
+        replacements.forEach(node::put);
+        return objectMapper.writeValueAsString(node);
     }
 }
 
