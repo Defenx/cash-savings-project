@@ -9,7 +9,8 @@ public enum AccountJson {
     CREATE_TITLE_WRONG_TYPE("/json/accounts/create-title-wrong-type.json"),
     CREATE_STANDARD_USD("/json/accounts/create-standard-usd.json"),
     CREATE_STANDARD_RUB("/json/accounts/create-standard-rub.json"),
-    CREATE_TITLE_VALIDATE_LENGTH("/json/accounts/create-title-validate-length.json");
+    CREATE_TITLE_VALIDATE_LENGTH("/json/accounts/create-title-validate-length.json"),
+    CREATE_TITLE_INVALIDATE_LENGTH("/json/accounts/create-title-invalidate-length.json");
 
     private final String path;
 
