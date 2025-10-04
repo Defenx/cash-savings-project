@@ -267,7 +267,6 @@ components:
       properties:
         title:
           type: string
-          maxLength: 50
         currency:
           $ref: '#/components/schemas/Currency'
         amount:
