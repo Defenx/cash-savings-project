@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -267,35 +268,22 @@ class AccountsComponentTest extends BaseComponentTest {
     }
 
     @Test
-    @DisplayName("POST: title максимальной длины из OpenAPI -> 201")
+    @DisplayName("POST: title максимальной длины из OpenAPI, maxLength = 50 -> 201")
     void createAccount_WhenTitleMaxLengthFromOpenApi_ShouldSucceed() throws Exception {
-        int maxLength = OpenApiReader.getTitleMaxLength();
-        String validTitle = OpenApiReader.generateTitleOfLength(maxLength);
 
-        String json = String.format(AccountJson.CREATE_TITLE_VALIDATE_LENGTH.load(), validTitle);
-
-        MockHttpServletResponse response = performPostAuth(ACCOUNTS_PATH, json)
+        performPostAuth(ACCOUNTS_PATH, AccountJson.CREATE_TITLE_VALIDATE_LENGTH.load())
                 .andExpect(status().isCreated())
-                .andReturn().getResponse();
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.currency").value("RUB"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.amount").value(0.00));
 
-        UUID id = TestUtils.extractIdFromLocation(response);
-        Account account = accountRepository.findById(id).orElseThrow();
-        assertThat(account.getTitle()).hasSize(maxLength);
     }
 
     @Test
-    @DisplayName("POST с title превышающим максимум из OpenAPI -> 400")
+    @DisplayName("POST с title превышающим максимум из OpenAPI, maxLength = 51 -> 400")
     void createAccount_WhenTitleExceedsMaxLengthFromOpenApi_ShouldFail() throws Exception {
-        int maxLength = OpenApiReader.getTitleMaxLength();
-        String invalidTitle = OpenApiReader.generateTitleOfLength(maxLength + 1);
 
-        String json = String.format(AccountJson.CREATE_TITLE_VALIDATE_LENGTH.load(), invalidTitle);
-
-        mvc.perform(MockMvcRequestBuilders.post(ACCOUNTS_PATH)
-                        .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
-                        .contentType(MediaType.APPLICATION_JSON_VALUE)
-                        .accept(MediaType.APPLICATION_PROBLEM_JSON_VALUE)
-                        .content(json))
+        performPostAuth(ACCOUNTS_PATH, AccountJson.CREATE_TITLE_INVALIDATE_LENGTH.load())
                 .andExpect(status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
