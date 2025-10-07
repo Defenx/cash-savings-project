@@ -8,7 +8,9 @@ public enum AccountJson {
     CREATE_AMOUNT_INTEGER_TOO_LONG("/json/accounts/create-amount-integer-too-long.json"),
     CREATE_TITLE_WRONG_TYPE("/json/accounts/create-title-wrong-type.json"),
     CREATE_STANDARD_USD("/json/accounts/create-standard-usd.json"),
-    CREATE_STANDARD_RUB("/json/accounts/create-standard-rub.json");
+    CREATE_STANDARD_RUB("/json/accounts/create-standard-rub.json"),
+    CREATE_DUPLICATE_TITLE_RUB("/json/accounts/create-duplicate-title-rub.json"),
+    CREATE_DUPLICATE_TITLE_USD("/json/accounts/create-duplicate-title-usd.json");
 
     private final String path;
 
