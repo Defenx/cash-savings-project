@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +18,9 @@ import static com.kavencore.moneyharbor.app.api.v1.controller.AccountsController
 import static com.kavencore.moneyharbor.app.api.v1.controller.AccountsController.ACCOUNTS_PATH_WITH_SLASH;
 import static com.kavencore.moneyharbor.app.api.v1.controller.UserController.GET_PROFILE_PATH;
 import static com.kavencore.moneyharbor.app.api.v1.controller.UserController.SIGN_UP_PATH;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Transactional
@@ -262,4 +266,28 @@ class AccountsComponentTest extends BaseComponentTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(MockMvcResultMatchers.header().doesNotExist(HttpHeaders.LOCATION));
     }
+
+    @Test
+    @DisplayName("POST: title максимальной длины из OpenAPI, maxLength = 50 -> 201")
+    void createAccount_WhenTitleMaxLengthFromOpenApi_ShouldSucceed() throws Exception {
+
+        performPostAuth(ACCOUNTS_PATH, AccountJson.CREATE_TITLE_VALIDATE_LENGTH.load())
+                .andExpect(status().isCreated())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.currency").value("RUB"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.amount").value(0.00));
+
+    }
+
+    @Test
+    @DisplayName("POST с title превышающим максимум из OpenAPI, maxLength = 51 -> 400")
+    void createAccount_WhenTitleExceedsMaxLengthFromOpenApi_ShouldFail() throws Exception {
+
+        performPostAuth(ACCOUNTS_PATH, AccountJson.CREATE_TITLE_INVALIDATE_LENGTH.load())
+                .andExpect(status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.errors[0]").value("title: size must be between 0 and 50"));
+    }
+
 }
