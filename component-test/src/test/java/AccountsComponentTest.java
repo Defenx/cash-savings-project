@@ -257,6 +257,30 @@ class AccountsComponentTest extends BaseComponentTest {
     }
 
     @Test
+    @DisplayName("POST: title максимальной длины из OpenAPI, maxLength = 50 -> 201")
+    void createAccount_WhenTitleMaxLengthFromOpenApi_ShouldSucceed() throws Exception {
+
+        performPostAuth(ACCOUNTS_PATH, AccountJson.CREATE_TITLE_VALIDATE_LENGTH.load())
+                .andExpect(status().isCreated())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.currency").value("RUB"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.amount").value(0.00));
+
+    }
+
+    @Test
+    @DisplayName("POST с title превышающим максимум из OpenAPI, maxLength = 51 -> 400")
+    void createAccount_WhenTitleExceedsMaxLengthFromOpenApi_ShouldFail() throws Exception {
+
+        performPostAuth(ACCOUNTS_PATH, AccountJson.CREATE_TITLE_INVALIDATE_LENGTH.load())
+                .andExpect(status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.errors[0]").value("title: size must be between 0 and 50"));
+    }
+
+
+    @Test
     @DisplayName("POST /accounts - 409: title+currency уже заняты -> ProblemDetail")
     void postDuplicateTitleSameCurrency409() throws Exception {
         performPostAuth(ACCOUNTS_PATH, AccountJson.CREATE_DUPLICATE_TITLE_RUB.load())
@@ -284,4 +308,3 @@ class AccountsComponentTest extends BaseComponentTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.currency").value("USD"));
     }
 }
-
