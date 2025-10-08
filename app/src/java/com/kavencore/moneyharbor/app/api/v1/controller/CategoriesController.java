@@ -3,13 +3,12 @@ package com.kavencore.moneyharbor.app.api.v1.controller;
 import com.kavencore.moneyharbor.app.api.controller.CategoriesApi;
 import com.kavencore.moneyharbor.app.api.model.CreateCategoryRequestDto;
 import com.kavencore.moneyharbor.app.api.model.CategoryResponseDto;
-import com.kavencore.moneyharbor.app.api.v1.dto.CreatedCategoryResult;
 import com.kavencore.moneyharbor.app.infrastructure.service.CategoryService;
 import com.kavencore.moneyharbor.app.security.AuthFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 
@@ -25,9 +24,15 @@ public class CategoriesController implements CategoriesApi {
 
     @Override
     public ResponseEntity<CategoryResponseDto> createCategory(CreateCategoryRequestDto createCategoryRequestDto) {
-        CreatedCategoryResult result = categoryService.createCategory(createCategoryRequestDto, authFacade.userId());
-        URI location = UriComponentsBuilder.fromPath(CATEGORIES_PATH_WITH_SLASH + "{id}").build(result.id().toString());
+        // Вызываем сервис
+        CategoryResponseDto responseDto = categoryService.createCategory(createCategoryRequestDto, authFacade.userId());
 
-        return ResponseEntity.created(location).body(result.body());
+        // Создаём URI для Location заголовка
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(responseDto.getId()) // <-- Берём ID из самого DTO
+                .toUri();
+
+        return ResponseEntity.created(location).body(responseDto);
     }
 }
