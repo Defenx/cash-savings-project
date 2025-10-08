@@ -1,5 +1,7 @@
+import com.kavencore.moneyharbor.app.infrastructure.repository.CategoryRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -7,14 +9,18 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.Optional;
 import com.kavencore.moneyharbor.app.entity.Category;
+import org.springframework.transaction.annotation.Transactional;
 
 import static com.kavencore.moneyharbor.app.api.v1.controller.CategoriesController.CATEGORIES_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@org.springframework.transaction.annotation.Transactional
+@Transactional
 @DisplayName("Categories API — component tests")
 class CategoriesComponentTest extends BaseComponentTest {
+
+    @Autowired
+    protected CategoryRepository categoryRepository;
 
     @Test
     @DisplayName("POST /categories — 201, атрибуты сохранены в базе")
