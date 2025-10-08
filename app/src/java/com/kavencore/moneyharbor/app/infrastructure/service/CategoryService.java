@@ -28,10 +28,10 @@ public class CategoryService {
 
         var user = userRepository.getReferenceById(userId);
 
-        Category category = categoryMapper.toEntity(dto);
+        var category = categoryMapper.toEntity(dto);
         category.setUser(user);
 
-        Category savedCategory = categoryRepository.save(category);
+        var savedCategory = categoryRepository.save(category);
 
         return categoryMapper.toDto(savedCategory);
     }
