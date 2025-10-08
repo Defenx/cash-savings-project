@@ -8,7 +8,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,9 +17,6 @@ import static com.kavencore.moneyharbor.app.api.v1.controller.AccountsController
 import static com.kavencore.moneyharbor.app.api.v1.controller.AccountsController.ACCOUNTS_PATH_WITH_SLASH;
 import static com.kavencore.moneyharbor.app.api.v1.controller.UserController.GET_PROFILE_PATH;
 import static com.kavencore.moneyharbor.app.api.v1.controller.UserController.SIGN_UP_PATH;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Transactional
@@ -102,13 +98,6 @@ class AccountsComponentTest extends BaseComponentTest {
         performPostAuth(ACCOUNTS_PATH, AccountJson.CREATE_STANDARD_RUB.load())
                 .andExpect(status().isCreated())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("RUB_счет_1"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.currency").value("RUB"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.amount").value(0.00));
-
-        performPostAuth(ACCOUNTS_PATH, AccountJson.CREATE_STANDARD_RUB.load())
-                .andExpect(status().isCreated())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("RUB_счет_1"))
-                // TODO: проанализировать возможность добавить ограничение на одинаковые названия счета у одного пользователя
                 .andExpect(MockMvcResultMatchers.jsonPath("$.currency").value("RUB"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.amount").value(0.00));
 
@@ -290,4 +279,32 @@ class AccountsComponentTest extends BaseComponentTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.errors[0]").value("title: size must be between 0 and 50"));
     }
 
+
+    @Test
+    @DisplayName("POST /accounts - 409: title+currency уже заняты -> ProblemDetail")
+    void postDuplicateTitleSameCurrency409() throws Exception {
+        performPostAuth(ACCOUNTS_PATH, AccountJson.CREATE_DUPLICATE_TITLE_RUB.load())
+                .andExpect(status().isCreated());
+
+        performPostAuth(ACCOUNTS_PATH, AccountJson.CREATE_DUPLICATE_TITLE_RUB.load())
+                .andExpect(status().isConflict())
+                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("SHARED_ACCOUNT"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.detail")
+                        .value("Account with title 'SHARED_ACCOUNT' already exists for currency 'RUB'"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.instruction")
+                        .value("Create an account with a unique title"));
+    }
+
+    @Test
+    @DisplayName("POST /accounts - 201: одинаковый title, другая currency")
+    void postDuplicateTitleDifferentCurrency201() throws Exception {
+        performPostAuth(ACCOUNTS_PATH, AccountJson.CREATE_DUPLICATE_TITLE_RUB.load())
+                .andExpect(status().isCreated());
+
+        performPostAuth(ACCOUNTS_PATH, AccountJson.CREATE_DUPLICATE_TITLE_USD.load())
+                .andExpect(status().isCreated())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("SHARED_ACCOUNT"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.currency").value("USD"));
+    }
 }

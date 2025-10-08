@@ -5,11 +5,13 @@ import com.kavencore.moneyharbor.app.api.model.CreateAccountRequestDto;
 import com.kavencore.moneyharbor.app.api.v1.dto.CreatedAccountResult;
 import com.kavencore.moneyharbor.app.entity.Account;
 import com.kavencore.moneyharbor.app.infrastructure.exception.AccountNotFoundException;
+import com.kavencore.moneyharbor.app.infrastructure.exception.TitleAlreadyExistsException;
 import com.kavencore.moneyharbor.app.infrastructure.mapper.AccountMapper;
 import com.kavencore.moneyharbor.app.infrastructure.repository.AccountRepository;
 import com.kavencore.moneyharbor.app.infrastructure.repository.UserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -17,7 +19,6 @@ import org.springframework.validation.annotation.Validated;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -33,10 +34,19 @@ public class AccountService {
     @Transactional
     public CreatedAccountResult createAccount(@Valid CreateAccountRequestDto dto, UUID userId) {
         Account acc = accountMapper.toEntity(dto);
+
+        if (accountRepository.existsAccountByUserIdAndTitleAndCurrency(userId, dto.getTitle(), acc.getCurrency())) {
+            throw new TitleAlreadyExistsException(dto.getTitle(), dto.getCurrency().name());
+        }
+
         acc.setUser(userRepository.getReferenceById(userId));
         applyDefaults(acc);
-        Account savedAcc = accountRepository.save(acc);
-
+        Account savedAcc;
+        try {
+            savedAcc = accountRepository.save(acc);
+        } catch (DataIntegrityViolationException e) {
+            throw new TitleAlreadyExistsException(acc.getTitle(), acc.getCurrency().name());
+        }
         return new CreatedAccountResult(savedAcc.getId(), accountMapper.toDto(savedAcc));
     }
 
@@ -83,6 +93,4 @@ public class AccountService {
                 .orElse(0L) + 1;
         return nextAccountNumber;
     }
-
-
 }
