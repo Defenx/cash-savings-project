@@ -271,7 +271,7 @@ components:
         title:
           type: string
           nullable: true
-          maxLength: 100
+          maxLength: 50
           description: Если null — сервер сгенерирует "{currency}_счет".
           example: null
         currency:
@@ -299,7 +299,6 @@ components:
       properties:
         title:
           type: string
-          maxLength: 100
         currency:
           $ref: '#/components/schemas/Currency'
         amount:
