@@ -17,7 +17,6 @@ import java.net.URI;
 public class CategoriesController implements CategoriesApi {
 
     public static final String CATEGORIES_PATH = "/categories";
-    public static final String CATEGORIES_PATH_WITH_SLASH = CATEGORIES_PATH + "/";
 
     private final CategoryService categoryService;
     private final AuthFacade authFacade;
