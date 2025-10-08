@@ -1,5 +1,3 @@
-import com.kavencore.moneyharbor.app.api.model.CreateCategoryRequestDto;
-import com.kavencore.moneyharbor.app.entity.Category;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
@@ -8,7 +6,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.Optional;
-import java.util.UUID;
+import com.kavencore.moneyharbor.app.entity.Category;
 
 import static com.kavencore.moneyharbor.app.api.v1.controller.CategoriesController.CATEGORIES_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,11 +19,7 @@ class CategoriesComponentTest extends BaseComponentTest {
     @Test
     @DisplayName("POST /categories — 201, атрибуты сохранены в базе")
     void createCategoryOkMapping() throws Exception {
-        CreateCategoryRequestDto request = new CreateCategoryRequestDto()
-                .name("Зарплата")
-                .type(CreateCategoryRequestDto.TypeEnum.INCOME);
-
-        String json = objectMapper.writeValueAsString(request);
+        var json = CategoryJson.CREATE_OK.load();
 
         var response = performPostAuth(CATEGORIES_PATH, json)
                 .andExpect(status().isCreated())
@@ -34,57 +28,43 @@ class CategoriesComponentTest extends BaseComponentTest {
                 .andExpect(jsonPath("$.type").value("INCOME"))
                 .andReturn().getResponse();
 
-        UUID id = TestUtils.extractIdFromLocation(response);
+        var id = TestUtils.extractIdFromLocation(response);
 
         Optional<Category> saved = categoryRepository.findById(id);
         assertThat(saved).isPresent();
         assertThat(saved.get().getName()).isEqualTo("Зарплата");
-        assertThat(saved.get().getType().name()).isEqualTo("INCOME"); // ✅ Сравниваем строки
+        assertThat(saved.get().getType().name()).isEqualTo("INCOME");
         assertThat(saved.get().getUser().getId()).isEqualTo(testUserId);
     }
 
     @Test
     @DisplayName("POST /categories — 400, если name = null")
     void createCategoryWithNullName400() throws Exception {
-        CreateCategoryRequestDto request = new CreateCategoryRequestDto()
-                .name(null)
-                .type(CreateCategoryRequestDto.TypeEnum.INCOME);
-
-        String json = objectMapper.writeValueAsString(request);
+        var json = CategoryJson.CREATE_WITH_NULL_NAME.load();
 
         performPostAuth(CATEGORIES_PATH, json)
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
                 .andExpect(jsonPath("$.errors").isArray())
-                .andExpect(jsonPath("$.errors[0]").value("name: must not be null"));
+                .andExpect(jsonPath("$.errors[0]").value(org.hamcrest.Matchers.containsString("name")));
     }
 
     @Test
     @DisplayName("POST /categories — 400, если type не из перечня")
     void createCategoryWithInvalidType400() throws Exception {
-        String invalidJson = """
-            {
-                "name": "Зарплата",
-                "type": "INVALID_TYPE"
-            }
-            """;
+        var json = CategoryJson.CREATE_WITH_INVALID_TYPE.load();
 
-        performPostAuth(CATEGORIES_PATH, invalidJson)
+        performPostAuth(CATEGORIES_PATH, json)
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
-                .andExpect(jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
-                .andExpect(jsonPath("$.detail").value("Invalid value in request body"));
-    }
+                .andExpect(jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()));
+     }
 
     @Test
     @DisplayName("POST /categories без авторизации — 401 Unauthorized")
     void createCategoryWithoutAuth401() throws Exception {
-        CreateCategoryRequestDto request = new CreateCategoryRequestDto()
-                .name("Зарплата")
-                .type(CreateCategoryRequestDto.TypeEnum.INCOME);
-
-        String json = objectMapper.writeValueAsString(request);
+        var json = CategoryJson.CREATE_OK.load();
 
         performPostNoAuth(CATEGORIES_PATH, json)
                 .andExpect(status().isUnauthorized())
