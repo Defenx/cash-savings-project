@@ -24,13 +24,12 @@ public class CategoriesController implements CategoriesApi {
 
     @Override
     public ResponseEntity<CategoryResponseDto> createCategory(CreateCategoryRequestDto createCategoryRequestDto) {
-        // Вызываем сервис
+
         CategoryResponseDto responseDto = categoryService.createCategory(createCategoryRequestDto, authFacade.userId());
 
-        // Создаём URI для Location заголовка
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(responseDto.getId()) // <-- Берём ID из самого DTO
+                .buildAndExpand(responseDto.getId())
                 .toUri();
 
         return ResponseEntity.created(location).body(responseDto);
