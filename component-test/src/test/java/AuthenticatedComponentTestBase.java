@@ -2,6 +2,7 @@ import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.util.UUID;
 
@@ -21,12 +22,12 @@ public abstract class AuthenticatedComponentTestBase extends BaseComponentTest {
 
         String signUpJson = UserJson.TEST_USER.load();
 
-        var resp = performPostNoAuth(SIGN_UP_PATH, signUpJson)
+        MockHttpServletResponse resp = performPostNoAuth(SIGN_UP_PATH, signUpJson)
                 .andReturn().getResponse();
 
         if (resp.getStatus() == HttpStatus.CONFLICT.value()) {
 
-            var profileResp = performGetAuth(GET_PROFILE_PATH)
+            MockHttpServletResponse profileResp = performGetAuth(GET_PROFILE_PATH)
                     .andExpect(status().isOk())
                     .andReturn().getResponse();
 

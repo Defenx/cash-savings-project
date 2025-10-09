@@ -2,6 +2,8 @@ package com.kavencore.moneyharbor.app.infrastructure.service;
 
 import com.kavencore.moneyharbor.app.api.model.CategoryResponseDto;
 import com.kavencore.moneyharbor.app.api.model.CreateCategoryRequestDto;
+import com.kavencore.moneyharbor.app.entity.Category;
+import com.kavencore.moneyharbor.app.entity.User;
 import com.kavencore.moneyharbor.app.infrastructure.mapper.CategoryMapper; // создадим позже
 import com.kavencore.moneyharbor.app.infrastructure.repository.CategoryRepository;
 import com.kavencore.moneyharbor.app.infrastructure.repository.UserRepository;
@@ -25,12 +27,12 @@ public class CategoryService {
     @Transactional
     public CategoryResponseDto createCategory(@Valid CreateCategoryRequestDto dto, UUID userId) {
 
-        var user = userRepository.getReferenceById(userId);
+        User user = userRepository.getReferenceById(userId);
 
-        var category = categoryMapper.toEntity(dto);
+        Category category = categoryMapper.toEntity(dto);
         category.setUser(user);
 
-        var savedCategory = categoryRepository.save(category);
+        Category savedCategory = categoryRepository.save(category);
 
         return categoryMapper.toDto(savedCategory);
     }

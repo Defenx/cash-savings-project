@@ -5,9 +5,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.Optional;
+import java.util.UUID;
+
 import com.kavencore.moneyharbor.app.entity.Category;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,16 +28,16 @@ class CategoriesComponentTest extends AuthenticatedComponentTestBase {
     @Test
     @DisplayName("POST /categories — 201, атрибуты сохранены в базе")
     void createCategoryOkMapping() throws Exception {
-        var json = CategoryJson.CREATE_OK.load();
+        String json = CategoryJson.CREATE_OK.load();
 
-        var response = performPostAuth(CATEGORIES_PATH, json)
+        MockHttpServletResponse response = performPostAuth(CATEGORIES_PATH, json)
                 .andExpect(status().isCreated())
                 .andExpect(MockMvcResultMatchers.header().exists(HttpHeaders.LOCATION))
                 .andExpect(jsonPath("$.name").value("Зарплата"))
                 .andExpect(jsonPath("$.type").value("INCOME"))
                 .andReturn().getResponse();
 
-        var id = TestUtils.extractIdFromLocation(response);
+        UUID id = TestUtils.extractIdFromLocation(response);
 
         Optional<Category> saved = categoryRepository.findById(id);
         assertThat(saved).isPresent();
@@ -46,7 +49,7 @@ class CategoriesComponentTest extends AuthenticatedComponentTestBase {
     @Test
     @DisplayName("POST /categories — 400, если name = null")
     void createCategoryWithNullName400() throws Exception {
-        var json = CategoryJson.CREATE_WITH_NULL_NAME.load();
+        String json = CategoryJson.CREATE_WITH_NULL_NAME.load();
 
         performPostAuth(CATEGORIES_PATH, json)
                 .andExpect(status().isBadRequest())
@@ -59,7 +62,7 @@ class CategoriesComponentTest extends AuthenticatedComponentTestBase {
     @Test
     @DisplayName("POST /categories — 400, если type не из перечня")
     void createCategoryWithInvalidType400() throws Exception {
-        var json = CategoryJson.CREATE_WITH_INVALID_TYPE.load();
+        String json = CategoryJson.CREATE_WITH_INVALID_TYPE.load();
 
         performPostAuth(CATEGORIES_PATH, json)
                 .andExpect(status().isBadRequest())
@@ -70,7 +73,7 @@ class CategoriesComponentTest extends AuthenticatedComponentTestBase {
     @Test
     @DisplayName("POST /categories без авторизации — 401 Unauthorized")
     void createCategoryWithoutAuth401() throws Exception {
-        var json = CategoryJson.CREATE_OK.load();
+        String json = CategoryJson.CREATE_OK.load();
 
         performPostNoAuth(CATEGORIES_PATH, json)
                 .andExpect(status().isUnauthorized())
