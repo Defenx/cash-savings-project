@@ -17,7 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Transactional
 @DisplayName("Categories API — component tests")
-class CategoriesComponentTest extends BaseComponentTest {
+class CategoriesComponentTest extends AuthenticatedComponentTestBase {
 
     @Autowired
     protected CategoryRepository categoryRepository;

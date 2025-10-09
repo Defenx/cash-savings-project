@@ -8,7 +8,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,36 +15,11 @@ import java.util.UUID;
 
 import static com.kavencore.moneyharbor.app.api.v1.controller.AccountsController.ACCOUNTS_PATH;
 import static com.kavencore.moneyharbor.app.api.v1.controller.AccountsController.ACCOUNTS_PATH_WITH_SLASH;
-import static com.kavencore.moneyharbor.app.api.v1.controller.UserController.GET_PROFILE_PATH;
-import static com.kavencore.moneyharbor.app.api.v1.controller.UserController.SIGN_UP_PATH;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Transactional
 @DisplayName("Accounts API — component tests")
-class AccountsComponentTest extends BaseComponentTest {
-
-    @BeforeEach
-    void ensureTestUser() throws Exception {
-        String signUpJson = UserJson.TEST_USER.load();
-
-        MockHttpServletResponse resp = performPostNoAuth(SIGN_UP_PATH, signUpJson)
-                .andReturn().getResponse();
-
-        if (resp.getStatus() == HttpStatus.CONFLICT.value()) {
-            MockHttpServletResponse profileResp = performGetAuth(GET_PROFILE_PATH)
-                    .andExpect(status().isOk())
-                    .andReturn().getResponse();
-
-            testUserId = UUID.fromString(JsonPath.read(profileResp.getContentAsString(), "$.id"));
-        } else {
-            String location = resp.getHeader(HttpHeaders.LOCATION);
-            testUserId = UUID.fromString(location.substring(location.lastIndexOf('/') + "/".length()));
-        }
-    }
-
+class AccountsComponentTest extends AuthenticatedComponentTestBase {
 
     @Test
     @DisplayName("Post /accounts - 201, атрибуты сохранены в базе")
