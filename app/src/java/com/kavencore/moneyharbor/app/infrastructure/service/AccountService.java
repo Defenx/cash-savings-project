@@ -85,4 +85,12 @@ public class AccountService {
     }
 
 
+    public void updateAccountTitle(UUID id, String newTitle, UUID userId) {
+        Account account = accountRepository.findByIdAndUserId(id, userId)
+                .orElseThrow(() -> new AccountNotFoundException(id));
+
+        account.setTitle(newTitle);
+        accountRepository.save(account);
+    }
+
 }
