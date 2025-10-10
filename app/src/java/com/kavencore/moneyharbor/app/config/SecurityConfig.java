@@ -6,6 +6,7 @@ import com.kavencore.moneyharbor.app.security.ProblemAuthEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -17,6 +18,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import static com.kavencore.moneyharbor.app.api.v1.controller.CategoriesController.CATEGORIES_PATH;
 import static com.kavencore.moneyharbor.app.api.v1.controller.UserController.GET_PROFILE_PATH;
 import static com.kavencore.moneyharbor.app.api.v1.controller.UserController.SIGN_UP_PATH;
 
@@ -55,6 +57,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(SWAGGER).permitAll()
                         .requestMatchers(SIGN_UP_PATH, "/error").permitAll()
+                        .requestMatchers(HttpMethod.POST, CATEGORIES_PATH).hasRole(RoleName.USER.name())
                         .requestMatchers("/accounts/**", GET_PROFILE_PATH).hasRole(RoleName.USER.name())
                         .anyRequest().authenticated()
                 )

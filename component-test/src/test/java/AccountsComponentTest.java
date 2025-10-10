@@ -1,6 +1,4 @@
-import com.jayway.jsonpath.JsonPath;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
@@ -15,33 +13,11 @@ import java.util.UUID;
 
 import static com.kavencore.moneyharbor.app.api.v1.controller.AccountsController.ACCOUNTS_PATH;
 import static com.kavencore.moneyharbor.app.api.v1.controller.AccountsController.ACCOUNTS_PATH_WITH_SLASH;
-import static com.kavencore.moneyharbor.app.api.v1.controller.UserController.GET_PROFILE_PATH;
-import static com.kavencore.moneyharbor.app.api.v1.controller.UserController.SIGN_UP_PATH;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Transactional
 @DisplayName("Accounts API — component tests")
-class AccountsComponentTest extends BaseComponentTest {
-
-    @BeforeEach
-    void ensureTestUser() throws Exception {
-        String signUpJson = UserJson.TEST_USER.load();
-
-        MockHttpServletResponse resp = performPostNoAuth(SIGN_UP_PATH, signUpJson)
-                .andReturn().getResponse();
-
-        if (resp.getStatus() == HttpStatus.CONFLICT.value()) {
-            MockHttpServletResponse profileResp = performGetAuth(GET_PROFILE_PATH)
-                    .andExpect(status().isOk())
-                    .andReturn().getResponse();
-
-            testUserId = UUID.fromString(JsonPath.read(profileResp.getContentAsString(), "$.id"));
-        } else {
-            String location = resp.getHeader(HttpHeaders.LOCATION);
-            testUserId = UUID.fromString(location.substring(location.lastIndexOf('/') + "/".length()));
-        }
-    }
-
+class AccountsComponentTest extends AuthenticatedComponentTestBase {
 
     @Test
     @DisplayName("Post /accounts - 201, атрибуты сохранены в базе")
