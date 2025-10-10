@@ -4,7 +4,7 @@ import com.kavencore.moneyharbor.app.api.model.CategoryResponseDto;
 import com.kavencore.moneyharbor.app.api.model.CreateCategoryRequestDto;
 import com.kavencore.moneyharbor.app.entity.Category;
 import com.kavencore.moneyharbor.app.entity.User;
-import com.kavencore.moneyharbor.app.infrastructure.mapper.CategoryMapper; // создадим позже
+import com.kavencore.moneyharbor.app.infrastructure.mapper.CategoryMapper;
 import com.kavencore.moneyharbor.app.infrastructure.repository.CategoryRepository;
 import com.kavencore.moneyharbor.app.infrastructure.repository.UserRepository;
 import jakarta.validation.Valid;
