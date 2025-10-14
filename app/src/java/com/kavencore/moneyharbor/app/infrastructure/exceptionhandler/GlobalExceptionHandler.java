@@ -1,5 +1,6 @@
 package com.kavencore.moneyharbor.app.infrastructure.exceptionhandler;
 
+import com.kavencore.moneyharbor.app.infrastructure.exception.AccountAccessDeniedException;
 import com.kavencore.moneyharbor.app.infrastructure.exception.AccountNotFoundException;
 import com.kavencore.moneyharbor.app.infrastructure.exception.EmailTakenException;
 import com.kavencore.moneyharbor.app.infrastructure.exception.MissingRoleException;
@@ -34,6 +35,14 @@ public class GlobalExceptionHandler {
         pd.setDetail(ex.getMessage());
         errorLogger.logClientError(req, HttpStatus.NOT_FOUND.value(), ex, null);
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(pd);
+    }
+
+    @ExceptionHandler(AccountAccessDeniedException.class)
+    public ResponseEntity<ProblemDetail> handleNotFound(AccountAccessDeniedException ex, HttpServletRequest req) {
+        ProblemDetail pd = getProblemDetail(req, HttpStatus.FORBIDDEN);
+        pd.setDetail(ex.getMessage());
+        errorLogger.logClientError(req, HttpStatus.FORBIDDEN.value(), ex, null);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(pd);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)

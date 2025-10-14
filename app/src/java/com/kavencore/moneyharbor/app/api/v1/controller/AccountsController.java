@@ -44,13 +44,10 @@ public class AccountsController implements AccountsApi {
     }
 
     @Override
-    public ResponseEntity<Void> updateAccountTitle(
-            UUID id,
+    public ResponseEntity<Void> updateAccountTitle(UUID id,
             UpdateAccountTitleRequestDto updateAccountTitleRequestDto) {
 
-        accountService.updateAccountTitle(
-                id,
-                updateAccountTitleRequestDto.getTitle(),
+        accountService.updateAccountTitle(id, updateAccountTitleRequestDto.getTitle(),
                 authFacade.userId()
         );
 

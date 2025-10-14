@@ -89,7 +89,13 @@ public abstract class BaseComponentTest {
         return mvc.perform(MockMvcRequestBuilders.patch(path)
                 .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .accept(MediaType.APPLICATION_JSON_VALUE)
+                .content(json));
+    }
+
+    protected ResultActions performPatchSecondUserAuth(String path, String json, String email, String password) throws Exception {
+        return mvc.perform(MockMvcRequestBuilders.patch(path)
+                .with(httpBasic(email, password))
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(json));
     }
 
@@ -100,4 +106,3 @@ public abstract class BaseComponentTest {
                 .content(json));
     }
 }
-

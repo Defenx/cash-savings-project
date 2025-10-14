@@ -141,6 +141,7 @@ paths:
         '204':
           description: Title успешно обновлен
         '400':
+#          $ref: '#/components/schemas/ProblemDetails'
           description: |
             Bad Request - RFC 9457 Problem Details
             Возможные причины:
@@ -150,31 +151,31 @@ paths:
           content:
             application/problem+json:
               schema: { $ref: '#/components/schemas/ProblemDetails' }
-              examples:
-                invalidUuid:
-                  summary: Невалидный UUID
-                  value:
-                    type: "about:blank"
-                    title: "Bad Request"
-                    status: 400
-                    detail: "Invalid UUID format: 123"
-                    instance: "/accounts/123/title"
-                nullTitle:
-                  summary: Title не может быть null
-                  value:
-                    type: "about:blank"
-                    title: "Bad Request"
-                    status: 400
-                    detail: "title: must not be null"
-                    instance: "/accounts/3fa85f64-5717-4562-b3fc-2c963f66afa6/title"
-                longTitle:
-                  summary: Title превышает 50 символов
-                  value:
-                    type: "about:blank"
-                    title: "Bad Request"
-                    status: 400
-                    detail: "title: length must be between 1 and 50"
-                    instance: "/accounts/3fa85f64-5717-4562-b3fc-2c963f66afa6/title"
+#              examples:
+#                invalidUuid:
+#                  summary: Невалидный UUID
+#                  value:
+#                    type: "about:blank"
+#                    title: "Bad Request"
+#                    status: 400
+#                    detail: "Invalid UUID format: 123"
+#                    instance: "/accounts/123/title"
+#                nullTitle:
+#                  summary: Title не может быть null
+#                  value:
+#                    type: "about:blank"
+#                    title: "Bad Request"
+#                    status: 400
+#                    detail: "title: must not be null"
+#                    instance: "/accounts/3fa85f64-5717-4562-b3fc-2c963f66afa6/title"
+#                longTitle:
+#                  summary: Title превышает 50 символов
+#                  value:
+#                    type: "about:blank"
+#                    title: "Bad Request"
+#                    status: 400
+#                    detail: "title: length must be between 1 and 50"
+#                    instance: "/accounts/3fa85f64-5717-4562-b3fc-2c963f66afa6/title"
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -184,15 +185,15 @@ paths:
           content:
             application/problem+json:
               schema: { $ref: '#/components/schemas/ProblemDetails' }
-              examples:
-                accountNotFound:
-                  summary: Счет не найден
-                  value:
-                    type: "about:blank"
-                    title: "Not Found"
-                    status: 404
-                    detail: "Account not found with id: 3fa85f64-5717-4562-b3fc-2c963f66afa6"
-                    instance: "/accounts/3fa85f64-5717-4562-b3fc-2c963f66afa6/title"
+#              examples:
+#                accountNotFound:
+#                  summary: Счет не найден
+#                  value:
+#                    type: "about:blank"
+#                    title: "Not Found"
+#                    status: 404
+#                    detail: "Account not found with id: 3fa85f64-5717-4562-b3fc-2c963f66afa6"
+#                    instance: "/accounts/3fa85f64-5717-4562-b3fc-2c963f66afa6/title"
 
   /user/sign-up:
     post:
