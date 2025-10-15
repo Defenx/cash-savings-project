@@ -1,3 +1,4 @@
+import com.kavencore.moneyharbor.app.entity.Category;
 import com.kavencore.moneyharbor.app.infrastructure.repository.CategoryRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -7,12 +8,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.UUID;
-
-import com.kavencore.moneyharbor.app.entity.Category;
-import org.springframework.transaction.annotation.Transactional;
 
 import static com.kavencore.moneyharbor.app.api.v1.controller.CategoriesController.CATEGORIES_PATH;
 import static org.assertj.core.api.Assertions.assertThat;

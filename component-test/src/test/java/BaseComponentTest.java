@@ -1,4 +1,7 @@
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.kavencore.moneyharbor.MoneyHarborApplication;
+import com.kavencore.moneyharbor.app.infrastructure.repository.OperationRepository;
 import com.kavencore.moneyharbor.app.infrastructure.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -11,6 +14,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.testcontainers.containers.PostgreSQLContainer;
 
+import java.util.Map;
 import java.util.UUID;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
@@ -25,6 +29,10 @@ public abstract class BaseComponentTest {
     protected UserRepository userRepository;
     @Autowired
     protected PasswordEncoder passwordEncoder;
+    @Autowired
+    protected ObjectMapper objectMapper;
+    @Autowired
+    protected OperationRepository operationRepository;
 
     protected static final String ACCOUNT_TEST_EMAIL = "test.user@example.com";
     protected static final String USER_TEST_EMAIL = "alice@example.com";
@@ -70,6 +78,28 @@ public abstract class BaseComponentTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .accept(MediaType.APPLICATION_PROBLEM_JSON_VALUE)
                 .content(json));
+    }
+
+    protected ResultActions postAuthExpectProblem(String path, String json) throws Exception {
+        return mvc.perform(MockMvcRequestBuilders.post(path)
+                .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_PROBLEM_JSON_VALUE)
+                .content(json));
+    }
+
+    protected ResultActions performPostAuthAs(String email, String password, String path, String json) throws Exception {
+        return mvc.perform(MockMvcRequestBuilders.post(path)
+                .with(httpBasic(email, password))
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON_VALUE)
+                .content(json));
+    }
+
+    protected String patchJson(String template, Map<String, String> replacements) throws Exception {
+        ObjectNode node = (ObjectNode) objectMapper.readTree(template);
+        replacements.forEach(node::put);
+        return objectMapper.writeValueAsString(node);
     }
 
     protected ResultActions performGetAuth(String path) throws Exception {

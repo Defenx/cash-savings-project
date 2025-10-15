@@ -47,6 +47,24 @@ public class Operation {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private Category category;
 
+    public void attachAccount(Account account) {
+        if (account == null) {
+            throw new IllegalArgumentException("Account must not be null");
+        }
+        if (!account.equals(this.account)) {
+            this.account = account;
+            if (!account.getOperations().contains(this)) {
+                account.getOperations().add(this);
+            }
+        }
+    }
+
+    public void attachCategory(Category category) {
+        if (category == null) {
+            throw new IllegalArgumentException("Category must not be null");
+        }
+        this.category = category;
+    }
     @Override
     public final boolean equals(Object o) {
         if (this == o) return true;
