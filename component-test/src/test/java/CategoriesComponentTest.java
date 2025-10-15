@@ -18,7 +18,6 @@ import static com.kavencore.moneyharbor.app.api.v1.controller.CategoriesControll
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Transactional
 @DisplayName("Categories API — component tests")
 class CategoriesComponentTest extends AuthenticatedComponentTestBase {
 
