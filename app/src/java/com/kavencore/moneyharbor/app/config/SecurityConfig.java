@@ -6,7 +6,6 @@ import com.kavencore.moneyharbor.app.security.ProblemAuthEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -18,7 +17,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import static com.kavencore.moneyharbor.app.api.v1.controller.AccountsController.ACCOUNTS_PATH_WITH_SLASH;
 import static com.kavencore.moneyharbor.app.api.v1.controller.CategoriesController.CATEGORIES_PATH;
+import static com.kavencore.moneyharbor.app.api.v1.controller.CategoriesController.CATEGORIES_PATH_WITH_SLASH;
+import static com.kavencore.moneyharbor.app.api.v1.controller.OperationController.OPERATIONS_PATH;
+import static com.kavencore.moneyharbor.app.api.v1.controller.OperationController.OPERATIONS_PATH_WITH_SLASH;
 import static com.kavencore.moneyharbor.app.api.v1.controller.UserController.GET_PROFILE_PATH;
 import static com.kavencore.moneyharbor.app.api.v1.controller.UserController.SIGN_UP_PATH;
 
@@ -35,6 +38,10 @@ public class SecurityConfig {
             "/swagger-resources/**",
             "/swagger/**",
     };
+    public static final String ACCOUNTS = ACCOUNTS_PATH_WITH_SLASH + "**";
+    public static final String OPERATIONS = OPERATIONS_PATH_WITH_SLASH + "**";
+    public static final String CATEGORIES = CATEGORIES_PATH_WITH_SLASH + "**";
+    public static final String ERROR = "/error";
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
@@ -56,11 +63,17 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(SWAGGER).permitAll()
-                        .requestMatchers(SIGN_UP_PATH, "/error").permitAll()
-                        .requestMatchers(HttpMethod.POST, CATEGORIES_PATH).hasRole(RoleName.USER.name())
-                        .requestMatchers("/accounts/**", GET_PROFILE_PATH).hasRole(RoleName.USER.name())
+                        .requestMatchers(SIGN_UP_PATH, ERROR).permitAll()
+                        .requestMatchers(
+                                CATEGORIES_PATH,
+                                OPERATIONS_PATH,
+                                GET_PROFILE_PATH,
+                                ACCOUNTS,
+                                OPERATIONS,
+                                CATEGORIES).hasRole(RoleName.USER.name())
                         .anyRequest().authenticated()
                 )
+
                 .httpBasic(Customizer.withDefaults())
                 .build();
     }

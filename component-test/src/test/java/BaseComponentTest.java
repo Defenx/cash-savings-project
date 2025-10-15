@@ -1,13 +1,8 @@
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.kavencore.moneyharbor.MoneyHarborApplication;
+import com.kavencore.moneyharbor.app.infrastructure.repository.OperationRepository;
 import com.kavencore.moneyharbor.app.infrastructure.repository.UserRepository;
-import com.kavencore.moneyharbor.app.api.model.UserSignUpRequestDto;
-import com.kavencore.moneyharbor.app.api.v1.dto.SignUpResult;
-import com.kavencore.moneyharbor.app.infrastructure.exception.EmailTakenException;
-import com.kavencore.moneyharbor.app.infrastructure.repository.*;
-import com.kavencore.moneyharbor.app.infrastructure.service.UserService;
-import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,6 +31,8 @@ public abstract class BaseComponentTest {
     protected PasswordEncoder passwordEncoder;
     @Autowired
     protected ObjectMapper objectMapper;
+    @Autowired
+    protected OperationRepository operationRepository;
 
     protected static final String ACCOUNT_TEST_EMAIL = "test.user@example.com";
     protected static final String USER_TEST_EMAIL = "alice@example.com";

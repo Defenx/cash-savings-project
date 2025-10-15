@@ -1,5 +1,4 @@
 import com.kavencore.moneyharbor.app.api.v1.controller.UserController;
-import com.kavencore.moneyharbor.app.entity.Account;
 import com.kavencore.moneyharbor.app.entity.Currency;
 import com.kavencore.moneyharbor.app.entity.Operation;
 import org.junit.jupiter.api.DisplayName;
@@ -16,6 +15,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static com.kavencore.moneyharbor.app.api.v1.controller.AccountsController.ACCOUNTS_PATH;
+import static com.kavencore.moneyharbor.app.api.v1.controller.AccountsController.ACCOUNTS_PATH_WITH_SLASH;
 import static com.kavencore.moneyharbor.app.api.v1.controller.CategoriesController.CATEGORIES_PATH;
 import static com.kavencore.moneyharbor.app.api.v1.controller.OperationController.OPERATIONS_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,7 +23,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Transactional
 @DisplayName("Operations API — компонентные тесты")
-public class OperationsComponentTest extends BaseComponentTest {
+public class OperationsComponentTest extends AuthenticatedComponentTestBase {
+
 
     @Test
     @DisplayName("POST /operation — 201, доход, баланс увеличен")
@@ -51,8 +52,8 @@ public class OperationsComponentTest extends BaseComponentTest {
         assertThat(saved.getCategory().getId()).isEqualTo(categoryId);
         assertThat(saved.getDate()).isEqualTo(LocalDate.of(2025, 10, 4));
 
-        Account updatedAccount = accountRepository.findById(accountId).orElseThrow();
-        assertThat(updatedAccount.getAmount()).isEqualByComparingTo("1500.00");
+        performGetAuth(ACCOUNTS_PATH_WITH_SLASH + accountId)
+                .andExpect(jsonPath("$.amount").value(1500.00));
     }
 
     @Test
@@ -79,8 +80,8 @@ public class OperationsComponentTest extends BaseComponentTest {
         assertThat(saved.getCurrency()).isEqualTo(Currency.RUB);
         assertThat(saved.getDate()).isEqualTo(LocalDate.now());
 
-        Account updatedAccount = accountRepository.findById(accountId).orElseThrow();
-        assertThat(updatedAccount.getAmount()).isEqualByComparingTo("-1250.50");
+        performGetAuth(ACCOUNTS_PATH_WITH_SLASH + accountId)
+                .andExpect(jsonPath("$.amount").value(-1250.50));
     }
 
     @Test
