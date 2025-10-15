@@ -13,6 +13,7 @@ import java.util.UUID;
 
 import static com.kavencore.moneyharbor.app.api.v1.controller.AccountsController.ACCOUNTS_PATH;
 import static com.kavencore.moneyharbor.app.api.v1.controller.AccountsController.ACCOUNTS_PATH_WITH_SLASH;
+import static com.kavencore.moneyharbor.app.api.v1.controller.UserController.SIGN_UP_PATH;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Transactional
@@ -255,7 +256,6 @@ class AccountsComponentTest extends AuthenticatedComponentTestBase {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.errors[0]").value("title: size must be between 0 and 50"));
     }
 
-
     @Test
     @DisplayName("POST /accounts - 409: title+currency уже заняты -> ProblemDetail")
     void postDuplicateTitleSameCurrency409() throws Exception {
@@ -271,9 +271,25 @@ class AccountsComponentTest extends AuthenticatedComponentTestBase {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.instruction")
                         .value("Create an account with a unique title"));
     }
+
+    @Test
+    @DisplayName("POST /accounts - 201: одинаковый title, другая currency")
+    void postDuplicateTitleDifferentCurrency201() throws Exception {
+        performPostAuth(ACCOUNTS_PATH, AccountJson.CREATE_DUPLICATE_TITLE_RUB.load())
+                .andExpect(status().isCreated());
+
+        performPostAuth(ACCOUNTS_PATH, AccountJson.CREATE_DUPLICATE_TITLE_USD.load())
+                .andExpect(status().isCreated())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("SHARED_ACCOUNT"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.currency").value("USD"));
+    }
+
     @Test
     @DisplayName("PATCH: title.Length = 50 -> 204")
     void updateAccountTitleValid_ShouldSucceed() throws Exception {
+
+        UUID accountId = createAccount();
+        String updateAccountTitlePath = ACCOUNTS_PATH_WITH_SLASH + accountId + "/title";
 
         performPatchAuth(updateAccountTitlePath, AccountJson.UPDATE_TITLE_VALIDATE_LENGTH.load())
                 .andExpect(status().isNoContent())
@@ -289,6 +305,7 @@ class AccountsComponentTest extends AuthenticatedComponentTestBase {
     @DisplayName("PATCH: title.length > 50 -> 400")
     void updateAccountTitleInvalid_ShouldFail() throws Exception {
 
+        String updateAccountTitlePath = getUpdateAccountTitlePath();
         performPatchAuth(updateAccountTitlePath, AccountJson.UPDATE_TITLE_INVALIDATE_LENGTH.load())
                 .andExpect(status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
@@ -300,6 +317,7 @@ class AccountsComponentTest extends AuthenticatedComponentTestBase {
     @DisplayName("PATCH: title is null -> 400")
     void updateAccountTitleNullShouldFail() throws Exception {
 
+        String updateAccountTitlePath = getUpdateAccountTitlePath();
         performPatchAuth(updateAccountTitlePath, AccountJson.UPDATE_TITLE_NULL.load())
                 .andExpect(status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
@@ -311,7 +329,7 @@ class AccountsComponentTest extends AuthenticatedComponentTestBase {
     @DisplayName("PATCH: Invalid UUID format -> 400")
     void updateAccountTitleInvalidUuidShouldFail() throws Exception {
 
-        updateAccountTitlePath = ACCOUNTS_PATH_WITH_SLASH + "123/title";
+        String updateAccountTitlePath = ACCOUNTS_PATH_WITH_SLASH + "123/title";
 
         performPatchAuth(updateAccountTitlePath, AccountJson.UPDATE_TITLE_NULL.load())
                 .andExpect(status().isBadRequest())
@@ -324,6 +342,7 @@ class AccountsComponentTest extends AuthenticatedComponentTestBase {
     @DisplayName("PATCH: user not authorized -> 401")
     void updateAccountTitleNotAuthShouldFail() throws Exception {
 
+        String updateAccountTitlePath = getUpdateAccountTitlePath();
         performPatchNoAuth(updateAccountTitlePath, AccountJson.UPDATE_TITLE_VALIDATE_LENGTH.load())
                 .andExpect(MockMvcResultMatchers.header().doesNotExist(HttpHeaders.LOCATION));
     }
@@ -331,6 +350,9 @@ class AccountsComponentTest extends AuthenticatedComponentTestBase {
     @Test
     @DisplayName("PATCH: Access denied to account -> 403")
     void updateAccountTitleAccountAccessDeniedShouldFail() throws Exception {
+
+        UUID accountId = createAccount();
+        String updateAccountTitlePath = ACCOUNTS_PATH_WITH_SLASH + accountId + "/title";
 
         String email = "test1.user@example.com";
         String password = "Password1";
@@ -354,7 +376,7 @@ class AccountsComponentTest extends AuthenticatedComponentTestBase {
     void updateAccountTitleAccountNotFoundShouldFail() throws Exception {
 
         UUID id = UUID.randomUUID();
-        updateAccountTitlePath = ACCOUNTS_PATH_WITH_SLASH + id + "/title";
+        String updateAccountTitlePath = ACCOUNTS_PATH_WITH_SLASH + id + "/title";
 
         performPatchAuth(updateAccountTitlePath, AccountJson.UPDATE_TITLE_VALIDATE_LENGTH.load())
                 .andExpect(status().isNotFound())
@@ -370,20 +392,13 @@ class AccountsComponentTest extends AuthenticatedComponentTestBase {
         MockHttpServletResponse createResponse = performPostAuth(ACCOUNTS_PATH, createJson)
                 .andExpect(status().isCreated())
                 .andReturn().getResponse();
-
         return TestUtils.extractIdFromLocation(createResponse);
     }
-}
 
-    @Test
-    @DisplayName("POST /accounts - 201: одинаковый title, другая currency")
-    void postDuplicateTitleDifferentCurrency201() throws Exception {
-        performPostAuth(ACCOUNTS_PATH, AccountJson.CREATE_DUPLICATE_TITLE_RUB.load())
-                .andExpect(status().isCreated());
+    private String getUpdateAccountTitlePath() throws Exception {
+        UUID accountId = createAccount();
 
-        performPostAuth(ACCOUNTS_PATH, AccountJson.CREATE_DUPLICATE_TITLE_USD.load())
-                .andExpect(status().isCreated())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("SHARED_ACCOUNT"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.currency").value("USD"));
+        return ACCOUNTS_PATH_WITH_SLASH + accountId + "/title";
     }
+
 }
