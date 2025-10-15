@@ -13,6 +13,7 @@ import java.util.UUID;
 
 import static com.kavencore.moneyharbor.app.api.v1.controller.AccountsController.ACCOUNTS_PATH;
 import static com.kavencore.moneyharbor.app.api.v1.controller.AccountsController.ACCOUNTS_PATH_WITH_SLASH;
+import static com.kavencore.moneyharbor.app.api.v1.controller.UserController.SIGN_UP_PATH;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Transactional
@@ -255,7 +256,6 @@ class AccountsComponentTest extends AuthenticatedComponentTestBase {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.errors[0]").value("title: size must be between 0 and 50"));
     }
 
-
     @Test
     @DisplayName("POST /accounts - 409: title+currency уже заняты -> ProblemDetail")
     void postDuplicateTitleSameCurrency409() throws Exception {
@@ -283,4 +283,122 @@ class AccountsComponentTest extends AuthenticatedComponentTestBase {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("SHARED_ACCOUNT"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.currency").value("USD"));
     }
+
+    @Test
+    @DisplayName("PATCH: title.Length = 50 -> 204")
+    void updateAccountTitleValid_ShouldSucceed() throws Exception {
+
+        UUID accountId = createAccount();
+        String updateAccountTitlePath = ACCOUNTS_PATH_WITH_SLASH + accountId + "/title";
+
+        performPatchAuth(updateAccountTitlePath, AccountJson.UPDATE_TITLE_VALIDATE_LENGTH.load())
+                .andExpect(status().isNoContent())
+                .andExpect(MockMvcResultMatchers.content().string(""));
+
+        performGetAuth(ACCOUNTS_PATH_WITH_SLASH + accountId)
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title")
+                        .value("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"));
+    }
+
+    @Test
+    @DisplayName("PATCH: title.length > 50 -> 400")
+    void updateAccountTitleInvalid_ShouldFail() throws Exception {
+
+        String updateAccountTitlePath = getUpdateAccountTitlePath();
+        performPatchAuth(updateAccountTitlePath, AccountJson.UPDATE_TITLE_INVALIDATE_LENGTH.load())
+                .andExpect(status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.errors[0]").value("title: size must be between 1 and 50"));
+    }
+
+    @Test
+    @DisplayName("PATCH: title is null -> 400")
+    void updateAccountTitleNullShouldFail() throws Exception {
+
+        String updateAccountTitlePath = getUpdateAccountTitlePath();
+        performPatchAuth(updateAccountTitlePath, AccountJson.UPDATE_TITLE_NULL.load())
+                .andExpect(status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.errors[0]").value("title: must not be null"));
+    }
+
+    @Test
+    @DisplayName("PATCH: Invalid UUID format -> 400")
+    void updateAccountTitleInvalidUuidShouldFail() throws Exception {
+
+        String updateAccountTitlePath = ACCOUNTS_PATH_WITH_SLASH + "123/title";
+
+        performPatchAuth(updateAccountTitlePath, AccountJson.UPDATE_TITLE_NULL.load())
+                .andExpect(status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.detail").value("Invalid UUID in path parameter 'id'"));
+    }
+
+    @Test
+    @DisplayName("PATCH: user not authorized -> 401")
+    void updateAccountTitleNotAuthShouldFail() throws Exception {
+
+        String updateAccountTitlePath = getUpdateAccountTitlePath();
+        performPatchNoAuth(updateAccountTitlePath, AccountJson.UPDATE_TITLE_VALIDATE_LENGTH.load())
+                .andExpect(MockMvcResultMatchers.header().doesNotExist(HttpHeaders.LOCATION));
+    }
+
+    @Test
+    @DisplayName("PATCH: Access denied to account -> 403")
+    void updateAccountTitleAccountAccessDeniedShouldFail() throws Exception {
+
+        UUID accountId = createAccount();
+        String updateAccountTitlePath = ACCOUNTS_PATH_WITH_SLASH + accountId + "/title";
+
+        String email = "test1.user@example.com";
+        String password = "Password1";
+        String createUserJson = String.format("{\"email\": \"%s\", \"password\": \"%s\"}", email, password);
+
+        performPostNoAuth(SIGN_UP_PATH, createUserJson)
+                .andReturn().getResponse();
+
+        String updateTitleJson = "{\"title\": \"Новое название\"}";
+
+        performPatchSecondUserAuth(updateAccountTitlePath, updateTitleJson, email, password)
+                .andExpect(status().isForbidden())
+                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.FORBIDDEN.getReasonPhrase()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.detail").value("Access denied to account: " + accountId));
+    }
+
+
+    @Test
+    @DisplayName("PATCH: Account not found -> 404")
+    void updateAccountTitleAccountNotFoundShouldFail() throws Exception {
+
+        UUID id = UUID.randomUUID();
+        String updateAccountTitlePath = ACCOUNTS_PATH_WITH_SLASH + id + "/title";
+
+        performPatchAuth(updateAccountTitlePath, AccountJson.UPDATE_TITLE_VALIDATE_LENGTH.load())
+                .andExpect(status().isNotFound())
+                .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(HttpStatus.NOT_FOUND.getReasonPhrase()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.detail").value("Account not found: " + id));
+    }
+
+    private UUID createAccount() throws Exception {
+
+        String createJson = AccountJson.CREATE_OK.load();
+
+        MockHttpServletResponse createResponse = performPostAuth(ACCOUNTS_PATH, createJson)
+                .andExpect(status().isCreated())
+                .andReturn().getResponse();
+        return TestUtils.extractIdFromLocation(createResponse);
+    }
+
+    private String getUpdateAccountTitlePath() throws Exception {
+        UUID accountId = createAccount();
+
+        return ACCOUNTS_PATH_WITH_SLASH + accountId + "/title";
+    }
+
 }

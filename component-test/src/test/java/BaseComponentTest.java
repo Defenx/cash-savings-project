@@ -84,5 +84,25 @@ public abstract class BaseComponentTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .accept(MediaType.APPLICATION_JSON_VALUE));
     }
-}
 
+    protected ResultActions performPatchAuth(String path, String json) throws Exception {
+        return mvc.perform(MockMvcRequestBuilders.patch(path)
+                .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(json));
+    }
+
+    protected ResultActions performPatchSecondUserAuth(String path, String json, String email, String password) throws Exception {
+        return mvc.perform(MockMvcRequestBuilders.patch(path)
+                .with(httpBasic(email, password))
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(json));
+    }
+
+    protected ResultActions performPatchNoAuth(String path, String json) throws Exception {
+        return mvc.perform(MockMvcRequestBuilders.patch(path)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON_VALUE)
+                .content(json));
+    }
+}

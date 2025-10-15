@@ -102,6 +102,64 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
 
+  /accounts/{id}/title:
+    patch:
+      tags: [ Accounts ]
+      summary: Update account title
+      description: |
+        Обновляет название счета. Доступно только пользователям с ролью USER.
+        
+        Валидация:
+        - id должен быть валидным UUID
+        - title обязателен (не null)
+        - title.length <= 50
+      operationId: updateAccountTitle
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID счета
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAccountTitleRequest'
+            examples:
+              valid:
+                summary: Валидный запрос
+                value: { title: "Зарплатный счет" }
+              nullTitle:
+                summary: Title = null (невалидно)
+                value: { title: null }
+              longTitle:
+                summary: Title > 50 символов (невалидно)
+                value: { title: "Очень длинное название счета которое превышает лимит в 50 символов" }
+      responses:
+        '204':
+          description: Title успешно обновлен
+        '400':
+          description: |
+            Bad Request - RFC 9457 Problem Details
+            Возможные причины:
+            - Невалидный UUID формата
+            - Title = null
+            - Title.length > 50
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Not Found — RFC 9457 Problem Details
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
   /user/sign-up:
     post:
       tags: [ User ]
@@ -411,3 +469,14 @@ components:
           enum: [ INCOME, EXPENSE ]
           description: Тип категории
           example: INCOME
+
+    UpdateAccountTitleRequest:
+      type: object
+      required: [ title ]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 50
+          description: Новое название счета. Обязательное поле, длина от 1 до 50 символов.
+          example: "Зарплатный счет"

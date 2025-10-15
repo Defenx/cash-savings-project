@@ -3,6 +3,7 @@ package com.kavencore.moneyharbor.app.api.v1.controller;
 import com.kavencore.moneyharbor.app.api.controller.AccountsApi;
 import com.kavencore.moneyharbor.app.api.model.AccountResponseDto;
 import com.kavencore.moneyharbor.app.api.model.CreateAccountRequestDto;
+import com.kavencore.moneyharbor.app.api.model.UpdateAccountTitleRequestDto;
 import com.kavencore.moneyharbor.app.api.v1.dto.CreatedAccountResult;
 import com.kavencore.moneyharbor.app.infrastructure.service.AccountService;
 import com.kavencore.moneyharbor.app.security.AuthFacade;
@@ -40,5 +41,16 @@ public class AccountsController implements AccountsApi {
     public ResponseEntity<Void> deleteAccount(UUID id) {
         boolean deleted = accountService.delete(id, authFacade.userId());
         return deleted ? ResponseEntity.noContent().build() : ResponseEntity.ok().build();
+    }
+
+    @Override
+    public ResponseEntity<Void> updateAccountTitle(UUID id,
+            UpdateAccountTitleRequestDto updateAccountTitleRequestDto) {
+
+        accountService.updateAccountTitle(id, updateAccountTitleRequestDto.getTitle(),
+                authFacade.userId()
+        );
+
+        return ResponseEntity.noContent().build();
     }
 }

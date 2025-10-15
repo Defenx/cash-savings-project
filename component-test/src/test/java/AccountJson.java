@@ -12,7 +12,10 @@ public enum AccountJson {
     CREATE_DUPLICATE_TITLE_RUB("/json/accounts/create-duplicate-title-rub.json"),
     CREATE_DUPLICATE_TITLE_USD("/json/accounts/create-duplicate-title-usd.json"),
     CREATE_TITLE_VALIDATE_LENGTH("/json/accounts/create-title-validate-length.json"),
-    CREATE_TITLE_INVALIDATE_LENGTH("/json/accounts/create-title-invalidate-length.json");
+    CREATE_TITLE_INVALIDATE_LENGTH("/json/accounts/create-title-invalidate-length.json"),
+    UPDATE_TITLE_VALIDATE_LENGTH("/json/accounts/update-title-validate-length.json"),
+    UPDATE_TITLE_INVALIDATE_LENGTH("/json/accounts/update-title-invalidate-length.json"),
+    UPDATE_TITLE_NULL("/json/accounts/update-title-null.json");
 
     private final String path;
 

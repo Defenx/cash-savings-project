@@ -4,6 +4,7 @@ import com.kavencore.moneyharbor.app.api.model.AccountResponseDto;
 import com.kavencore.moneyharbor.app.api.model.CreateAccountRequestDto;
 import com.kavencore.moneyharbor.app.api.v1.dto.CreatedAccountResult;
 import com.kavencore.moneyharbor.app.entity.Account;
+import com.kavencore.moneyharbor.app.infrastructure.exception.AccountAccessDeniedException;
 import com.kavencore.moneyharbor.app.infrastructure.exception.AccountNotFoundException;
 import com.kavencore.moneyharbor.app.infrastructure.exception.TitleAlreadyExistsException;
 import com.kavencore.moneyharbor.app.infrastructure.mapper.AccountMapper;
@@ -92,5 +93,18 @@ public class AccountService {
                 .max()
                 .orElse(0L) + 1;
         return nextAccountNumber;
+    }
+
+    @Transactional
+    public void updateAccountTitle(UUID id, String newTitle, UUID userId) {
+        Account account = accountRepository.findById(id)
+                .orElseThrow(() -> new AccountNotFoundException(id));
+
+        if (!account.getUser().getId().equals(userId)) {
+            throw new AccountAccessDeniedException(id);
+        }
+
+        account.setTitle(newTitle);
+        accountRepository.save(account);
     }
 }
