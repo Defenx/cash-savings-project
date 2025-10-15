@@ -51,6 +51,8 @@ public class OperationService {
         operation.attachCategory(category);
 
         account.addOperation(operation);
+        account.setAmount(account.getAmount().add(amount));
+        accountRepository.save(account);
 
         return operationRepository.save(operation).getId();
     }

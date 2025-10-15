@@ -5,7 +5,6 @@ import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -65,9 +64,5 @@ public class Account {
             return;
         }
         operation.attachAccount(this);
-        if (amount == null) {
-            amount = BigDecimal.ZERO;
-        }
-        amount = amount.add(operation.getAmount().setScale(2, RoundingMode.HALF_UP));
     }
 }
