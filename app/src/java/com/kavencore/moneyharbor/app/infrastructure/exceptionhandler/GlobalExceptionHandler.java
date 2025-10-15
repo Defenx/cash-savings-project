@@ -86,6 +86,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(pd);
     }
 
+    @ExceptionHandler(TitleAlreadyExistsException.class)
+    public ResponseEntity<ProblemDetail> handleAccountTitleTaken(TitleAlreadyExistsException ex, HttpServletRequest req) {
+        ProblemDetail pd = pdFactory.build(req, HttpStatus.CONFLICT, ex.getMessage());
+        pd.setProperty("title", ex.getTitle());
+        if (ex.getCurrency() != null) {
+            pd.setProperty("currency", ex.getCurrency());
+        }
+        pd.setProperty("instruction", "Create an account with a unique title");
+        errorLogger.logClientError(req, HttpStatus.CONFLICT.value(), ex, ex.getTitle());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(pd);
+    }
+
     @ExceptionHandler(MissingRoleException.class)
     public ResponseEntity<ProblemDetail> handleMissingRole(MissingRoleException ex, HttpServletRequest req) {
         ProblemDetail pd = getProblemDetail(req, HttpStatus.INTERNAL_SERVER_ERROR);

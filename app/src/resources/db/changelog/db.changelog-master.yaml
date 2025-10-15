@@ -9,6 +9,8 @@ databaseChangeLog:
                  relativeToChangelogFile: true }
   - include: { file: 005-update-operations-with-category.sql,
                relativeToChangelogFile: true }
+  - include: { file: 006-update-accounts-constraint-title-currency.sql,
+               relativeToChangelogFile: true }
 
 
 

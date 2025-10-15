@@ -1,5 +1,4 @@
 import com.kavencore.moneyharbor.app.entity.Currency;
-import com.kavencore.moneyharbor.app.entity.Role;
 import com.kavencore.moneyharbor.app.entity.RoleName;
 import com.kavencore.moneyharbor.app.entity.User;
 import org.junit.jupiter.api.DisplayName;
@@ -11,7 +10,6 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import java.util.List;
 import java.util.UUID;
 
 import static com.kavencore.moneyharbor.app.api.v1.controller.AccountsController.ACCOUNTS_PATH;
@@ -64,15 +62,9 @@ class UsersComponentTest extends BaseComponentTest {
     @Test
     @DisplayName("POST /user/sign-up — 409: email уже существует → ProblemDetails")
     void signUp409() throws Exception {
-        Role roleUser = roleRepository.findByRoleName(RoleName.USER).orElseThrow();
-        User existing = User.builder()
-                .email("dupe@example.com")
-                .password(passwordEncoder.encode(TEST_PASSWORD))
-                .roles(List.of(roleUser))
-                .build();
-        userRepository.save(existing);
-
         String json = UserJson.SIGN_UP_DUPE.load();
+        performPostNoAuth(SIGN_UP_PATH, json);
+
         postExpectProblem(SIGN_UP_PATH, json)
                 .andExpect(status().isConflict())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
@@ -83,13 +75,10 @@ class UsersComponentTest extends BaseComponentTest {
     @Test
     @DisplayName("GET /user/profile - 200, корректный маппинг")
     void getProfile200() throws Exception {
-        String json = AccountJson.CREATE_OK.load();
-        performPostAuth(ACCOUNTS_PATH, json);
+        performPostNoAuth(SIGN_UP_PATH, UserJson.TEST_USER.load()).andExpect(status().isCreated());
+        performPostAuth(ACCOUNTS_PATH, AccountJson.CREATE_OK.load()).andExpect(status().isCreated());
 
-        mvc.perform(MockMvcRequestBuilders
-                        .get(GET_PROFILE_PATH)
-                        .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD))
-                        .accept(MediaType.APPLICATION_JSON_VALUE))
+        performGetAuth(GET_PROFILE_PATH)
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.email").value(ACCOUNT_TEST_EMAIL))
@@ -101,14 +90,12 @@ class UsersComponentTest extends BaseComponentTest {
     @Test
     @DisplayName("GET /user/profile без авторизации -> 401 Unauthorized")
     void profileWithoutAuth401() throws Exception {
-        mvc.perform(MockMvcRequestBuilders
-                        .get(GET_PROFILE_PATH)
-                        .accept(MediaType.APPLICATION_JSON_VALUE))
+        performGetNoAuth(GET_PROFILE_PATH)
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    @DisplayName("GET /user/profile - 200, в случае если аккаунтов нету - возращаем пустой список")
+    @DisplayName("GET /user/profile - 200, в случае если аккаунтов нету - возвращаем пустой список")
     void getProfile200WithoutAccounts() throws Exception {
         String json = UserJson.SIGN_UP_WITHOUT_ACCOUNT.load();
 
