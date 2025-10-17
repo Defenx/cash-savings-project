@@ -118,7 +118,7 @@ class AccountsComponentTest extends AuthenticatedComponentTestBase {
                 .isEqualTo(expectedNumber);
     }
 
-    private boolean checkAndCreateBaseAccount(User user, String currencyPrefix, AccountJson accountJson) throws Exception {
+    private void checkAndCreateBaseAccount(User user, String currencyPrefix, AccountJson accountJson) throws Exception {
         List<Account> userAccounts = accountRepository.findAllByUser(user);
 
         boolean exists = userAccounts.stream()
@@ -129,9 +129,7 @@ class AccountsComponentTest extends AuthenticatedComponentTestBase {
         if (!exists) {
             performPostAuth(ACCOUNTS_PATH, accountJson.load())
                     .andExpect(status().isCreated());
-            return true;
         }
-        return false;
     }
 
     /**
