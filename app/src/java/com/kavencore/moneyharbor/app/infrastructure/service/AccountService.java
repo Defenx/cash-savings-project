@@ -29,7 +29,7 @@ public class AccountService {
     private final UserRepository userRepository;
     private final AccountMapper accountMapper;
 
-    private static final String TITLE_SUFFIX = "_счет_";
+    public static final String TITLE_SUFFIX = "_счет_";
 
     @Transactional
     public CreatedAccountResult createAccount(@Valid CreateAccountRequestDto dto, UUID userId) {
@@ -84,13 +84,12 @@ public class AccountService {
                 acc.getUser().getId(),
                 acc.getCurrency()
         );
-        long nextAccountNumber = usersAccWithThisCurrency.stream()
+        return usersAccWithThisCurrency.stream()
                 .map(Account::getTitle)
                 .filter(title -> title.startsWith(titleQuery))
                 .map(title -> title.substring(titleQuery.length()))
                 .mapToLong(Long::parseLong)
                 .max()
                 .orElse(0L) + 1;
-        return nextAccountNumber;
     }
 }

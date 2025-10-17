@@ -83,7 +83,7 @@ class UsersComponentTest extends BaseComponentTest {
                 .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.email").value(ACCOUNT_TEST_EMAIL))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.accounts[*].currency", hasItem(Currency.RUB.name())))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.accounts[*].title", hasItem("Зарплатный")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.accounts[*].title", hasItem(AccountsComponentTest.ZARPLATNYI_TITLE)))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.accounts[*].amount", hasItem(1500.50)));
     }
 
