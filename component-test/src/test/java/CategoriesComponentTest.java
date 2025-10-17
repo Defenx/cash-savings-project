@@ -12,7 +12,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import com.kavencore.moneyharbor.app.entity.Category;
-import org.springframework.transaction.annotation.Transactional;
 
 import static com.kavencore.moneyharbor.app.api.v1.controller.CategoriesController.CATEGORIES_PATH;
 import static org.assertj.core.api.Assertions.assertThat;

@@ -1,6 +1,7 @@
 public enum AccountJson {
     CREATE_OK("/json/accounts/create-ok.json"),
-    CREATE_WITHOUT_TITLE("/json/accounts/create-without-title.json"),
+    CREATE_WITHOUT_TITLE_USD("/json/accounts/create-without-title-usd.json"),
+    CREATE_WITHOUT_TITLE_RUB("/json/accounts/create-without-title-rub.json"),
     CREATE_INVALID_ENUM("/json/accounts/create-invalid-enum.json"),
     CREATE_WITH_CURRENCY_NOT_IN_ENUM("/json/accounts/create-with-currency-not-in-enum.json"),
     CREATE_MISSING_CURRENCY("/json/accounts/create-missing-currency.json"),

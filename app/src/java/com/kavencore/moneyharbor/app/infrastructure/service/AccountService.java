@@ -29,7 +29,7 @@ public class AccountService {
     private final UserRepository userRepository;
     private final AccountMapper accountMapper;
 
-    private static final String TITLE_SUFFIX = "_счет_";
+    public static final String TITLE_SUFFIX = "_счет_";
 
     @Transactional
     public CreatedAccountResult createAccount(@Valid CreateAccountRequestDto dto, UUID userId) {
