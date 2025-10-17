@@ -26,6 +26,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("Accounts API — component tests")
 class AccountsComponentTest extends AuthenticatedComponentTestBase {
 
+    public static final String SHARED_ACCOUNT_TITLE = "SHARED_ACCOUNT";
+    public static final String ZARPLATNYI_TITLE = "Зарплатный";
+
     @Autowired
     protected AccountRepository accountRepository;
 
@@ -37,7 +40,7 @@ class AccountsComponentTest extends AuthenticatedComponentTestBase {
         MockHttpServletResponse response = performPostAuth(ACCOUNTS_PATH, json)
                 .andExpect(status().isCreated())
                 .andExpect(MockMvcResultMatchers.header().exists(HttpHeaders.LOCATION))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("Зарплатный"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(ZARPLATNYI_TITLE))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.currency").value("RUB"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.amount").value(1500.50))
                 .andReturn().getResponse();
@@ -46,7 +49,7 @@ class AccountsComponentTest extends AuthenticatedComponentTestBase {
 
         ResultActions resultActions = performGetAuth(ACCOUNTS_PATH_WITH_SLASH + id);
         resultActions.andExpect(status().isOk());
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.title").value("Зарплатный"));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.title").value(ZARPLATNYI_TITLE));
         resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.currency").value("RUB"));
         resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.amount").value(1500.50));
     }
@@ -159,6 +162,9 @@ class AccountsComponentTest extends AuthenticatedComponentTestBase {
     @Test
     @DisplayName("DELETE существующего -> 204 и запись удалена")
     void deleteExisting204() throws Exception {
+
+        cleanupAccountsByTitle(ZARPLATNYI_TITLE);
+
         String json = AccountJson.CREATE_OK.load();
         MockHttpServletResponse resp = performPostAuth(ACCOUNTS_PATH, json)
                 .andExpect(status().isCreated())
@@ -177,7 +183,6 @@ class AccountsComponentTest extends AuthenticatedComponentTestBase {
         performGetAuth(ACCOUNTS_PATH_WITH_SLASH + id)
                 .andExpect(status().isNotFound());
     }
-
 
     @Test
     @DisplayName("DELETE несуществующего -> 200 (идемпотентно)")
@@ -336,9 +341,9 @@ class AccountsComponentTest extends AuthenticatedComponentTestBase {
         performPostAuth(ACCOUNTS_PATH, AccountJson.CREATE_DUPLICATE_TITLE_RUB.load())
                 .andExpect(status().isConflict())
                 .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("SHARED_ACCOUNT"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(SHARED_ACCOUNT_TITLE))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.detail")
-                        .value("Account with title 'SHARED_ACCOUNT' already exists for currency 'RUB'"))
+                        .value("Account with title '" + SHARED_ACCOUNT_TITLE + "' already exists for currency 'RUB'"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.instruction")
                         .value("Create an account with a unique title"));
     }
@@ -346,12 +351,38 @@ class AccountsComponentTest extends AuthenticatedComponentTestBase {
     @Test
     @DisplayName("POST /accounts - 201: одинаковый title, другая currency")
     void postDuplicateTitleDifferentCurrency201() throws Exception {
+
+        cleanupAccountsByTitle(SHARED_ACCOUNT_TITLE);
+
         performPostAuth(ACCOUNTS_PATH, AccountJson.CREATE_DUPLICATE_TITLE_RUB.load())
                 .andExpect(status().isCreated());
 
         performPostAuth(ACCOUNTS_PATH, AccountJson.CREATE_DUPLICATE_TITLE_USD.load())
                 .andExpect(status().isCreated())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("SHARED_ACCOUNT"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(SHARED_ACCOUNT_TITLE))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.currency").value("USD"));
+    }
+
+    /**
+     * Удаляет все счета с указанным title у текущего пользователя через API.
+     * Используется в тестах, где проверяется уникальность по (title + currency),
+     * чтобы избежать конфликтов с предыдущими запусками.
+     *
+     * @param title Название счёта для удаления (например, "Зарплатный", "SHARED_ACCOUNT")
+     */
+    protected void cleanupAccountsByTitle(String title) throws Exception {
+
+        if (testUserId != null) {
+            User user = userRepository.getReferenceById(testUserId);
+            List<Account> accountsToDelete = accountRepository.findAllByUser(user)
+                    .stream()
+                    .filter(acc -> title.equals(acc.getTitle()))
+                    .toList();
+
+            for (Account account : accountsToDelete) {
+                performDeleteAuthOk(ACCOUNTS_PATH_WITH_SLASH + account.getId())
+                        .andExpect(status().isNoContent());
+            }
+        }
     }
 }
