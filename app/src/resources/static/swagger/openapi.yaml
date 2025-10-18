@@ -170,6 +170,28 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/UserProfileResponse' }
 
+  /user:
+    delete:
+      tags: [ User ]
+      summary: Удаление пользователя
+      description: |
+        Удаляет текущего авторизованного пользователя с ролью USER.  
+        При удалении:
+        - Удаляется пользователь
+        - Удаляются его счета
+        - Удаляются его операции
+        - Удаляются его категории
+
+        Эндпоинт требует аутентификации.
+      operationId: deleteUser
+      responses:
+        '200':
+          description: Пользователь и связанные данные успешно удалены
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   /categories:
     post:
       tags: [ Categories ]

@@ -38,4 +38,10 @@ public class UserController implements UserApi {
 
         return ResponseEntity.ok(userProfile);
     }
+
+    @Override
+    public ResponseEntity<Void> deleteUser() {
+        boolean deletedUser = userService.delete();
+        return deletedUser ? ResponseEntity.ok().build() : ResponseEntity.noContent().build();
+    }
 }

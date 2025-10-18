@@ -32,6 +32,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final AuthFacade authFacade;
     private final UserMapper userMapper;
+    private final CategoryService categoryService;
+    private final AccountService accountService;
 
     @Transactional
     public SignUpResult signUp(UserSignUpRequestDto req) {
@@ -66,6 +68,17 @@ public class UserService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         return userMapper.toDto(user);
+    }
+
+    @Transactional
+    public boolean delete() {
+        //TODO джём добавления OperationService и всего остального чтобы имплементировать удаление операций пользователя.
+        //operationService.deleteAll(authFacade.userId());
+        categoryService.deleteAll(authFacade.userId());
+        accountService.deleteAll(authFacade.userId());
+        int deletedUser = userRepository.deleteUserById(authFacade.userId());
+
+        return deletedUser > 0;
     }
 
     private String normalizeEmail(String email) {

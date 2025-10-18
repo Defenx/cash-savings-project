@@ -65,6 +65,13 @@ public class AccountService {
         return affected > 0;
     }
 
+    @Transactional
+    public boolean deleteAll(UUID userId) {
+        int affected = accountRepository.deleteAllByUserId(userId);
+
+        return affected > 0;
+    }
+
     private void applyDefaults(Account acc) {
         if (acc.getTitle() == null) {
             long nextAccountNumber = calculateNextAccountNumber(acc);

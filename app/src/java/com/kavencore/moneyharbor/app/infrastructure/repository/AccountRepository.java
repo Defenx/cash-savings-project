@@ -12,6 +12,8 @@ import java.util.UUID;
 public interface AccountRepository extends JpaRepository<Account, UUID> {
     int deleteByIdAndUserId(UUID accId, UUID userId);
 
+    int deleteAllByUserId(UUID userId);
+
     List<Account> findAllByUser(User user);
 
     Optional<Account> findByIdAndUserId(UUID id, UUID userId);

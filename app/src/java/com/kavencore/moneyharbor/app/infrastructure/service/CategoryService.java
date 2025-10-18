@@ -36,4 +36,11 @@ public class CategoryService {
 
         return categoryMapper.toDto(savedCategory);
     }
+
+    @Transactional
+    public boolean deleteAll(UUID userId) {
+        int affected = categoryRepository.deleteAllByUserId(userId);
+
+        return affected > 0;
+    }
 }
