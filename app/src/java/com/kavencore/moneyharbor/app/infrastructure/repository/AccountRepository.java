@@ -12,11 +12,11 @@ import java.util.UUID;
 public interface AccountRepository extends JpaRepository<Account, UUID> {
     int deleteByIdAndUserId(UUID accId, UUID userId);
 
-    List<Account> findAllByUser(User user);
-
     Optional<Account> findByIdAndUserId(UUID id, UUID userId);
 
     List<Account> findByUserIdAndCurrency(UUID userId, Currency currency);
 
     boolean existsAccountByUserIdAndTitleAndCurrency(UUID userId, String title, Currency currency);
+
+    List<Account> findByUserId(UUID userId);
 }

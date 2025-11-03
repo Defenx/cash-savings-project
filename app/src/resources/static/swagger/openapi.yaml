@@ -201,6 +201,35 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
 
+  /categories/{categoryId}:
+    delete:
+      tags: [ Categories ]
+      summary: Удалить категорию
+      description: Удаляет категорию по ее ID.
+      operationId: deleteCategory
+      security:
+        - BasicAuth: [ ]
+      parameters:
+        - name: categoryId
+          in: path
+          required: true
+          description: ID удаляемой категории
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Категория успешно удалена (No Content)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: Конфликт (категория используется в операциях)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
+
 components:
   securitySchemes:
     BasicAuth:
