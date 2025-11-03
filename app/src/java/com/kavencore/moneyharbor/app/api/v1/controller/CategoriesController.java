@@ -36,9 +36,10 @@ public class CategoriesController implements CategoriesApi {
 
         return ResponseEntity.created(location).body(responseDto);
     }
+    @Override
     @PreAuthorize("hasRole('User')")
     public ResponseEntity<Void> deleteCategory(UUID categoryId) {
-        categoryService.delete(categoryId, authFacade.userId());
+        categoryService.delete(authFacade.userId(), categoryId);
         return ResponseEntity.noContent().build();
     }
 }

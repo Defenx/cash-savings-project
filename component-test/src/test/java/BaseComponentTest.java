@@ -31,7 +31,6 @@ public abstract class BaseComponentTest {
     protected static final String TEST_PASSWORD = "Abcdefg1";
     protected UUID testUserId;
 
-
     @ServiceConnection
     static final PostgreSQLContainer<?> PG =
             new PostgreSQLContainer<>("postgres:16-alpine")
@@ -56,6 +55,10 @@ public abstract class BaseComponentTest {
     protected ResultActions performDeleteAuthOk(String path) throws Exception {
         return mvc.perform(MockMvcRequestBuilders.delete(path)
                 .with(httpBasic(ACCOUNT_TEST_EMAIL, TEST_PASSWORD)));
+    }
+
+    protected ResultActions performDeleteNoAuth(String path) throws Exception {
+        return mvc.perform(MockMvcRequestBuilders.delete(path));
     }
 
     protected ResultActions postJson(String path, String json) throws Exception {

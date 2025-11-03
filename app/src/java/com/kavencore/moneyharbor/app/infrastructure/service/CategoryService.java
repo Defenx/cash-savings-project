@@ -11,10 +11,12 @@ import com.kavencore.moneyharbor.app.infrastructure.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.UUID;
 
@@ -54,7 +56,7 @@ public class CategoryService {
         boolean isUsed = operationReposiroty.existsByCategoryId(categoryId);
 
         if(isUsed) {
-            throw new IllegalStateException("Категория не может быть удалена, т.к. используется в операциях");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Категория не может быть удалена, т.к. используется в операциях");
         }
 
 

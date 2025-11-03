@@ -24,4 +24,8 @@ subprojects {
 	configurations.configureEach {
 		resolutionStrategy.force(libs.commons.compress)
 	}
+
+	tasks.withType<JavaCompile> {
+		options.encoding = "UTF-8"
+	}
 }
