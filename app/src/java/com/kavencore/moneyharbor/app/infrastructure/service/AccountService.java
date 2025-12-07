@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
+//import java.math.RoundingMode;
 import java.util.List;
 import java.util.UUID;
 
@@ -40,7 +40,7 @@ public class AccountService {
         }
 
         acc.setUser(userRepository.getReferenceById(userId));
-        applyDefaults(acc);
+//        applyDefaults(acc);
         Account savedAcc;
         try {
             savedAcc = accountRepository.save(acc);
@@ -65,17 +65,17 @@ public class AccountService {
         return affected > 0;
     }
 
-    private void applyDefaults(Account acc) {
-        if (acc.getTitle() == null) {
-            long nextAccountNumber = calculateNextAccountNumber(acc);
-            acc.setTitle(acc.getCurrency().name() + TITLE_SUFFIX + nextAccountNumber);
-        }
-        if (acc.getAmount() == null) {
-            acc.setAmount(BigDecimal.ZERO);
-        } else {
-            acc.setAmount(acc.getAmount().setScale(2, RoundingMode.HALF_UP));
-        }
-    }
+//    private void applyDefaults(Account acc) {
+//        if (acc.getTitle() == null) {
+//            long nextAccountNumber = calculateNextAccountNumber(acc);
+//            acc.setTitle(acc.getCurrency().name() + TITLE_SUFFIX + nextAccountNumber);
+//        }
+//        if (acc.getAmount() == null) {
+//            acc.setAmount(BigDecimal.ZERO);
+//        } else {
+//            acc.setAmount(acc.getAmount().setScale(2, RoundingMode.HALF_UP));
+//        }
+//    }
 
     private long calculateNextAccountNumber(Account acc) {
         String titleQuery = acc.getCurrency().name() + TITLE_SUFFIX;

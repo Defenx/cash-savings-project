@@ -1,12 +1,12 @@
 package com.kavencore.moneyharbor.app.entity;
 
-public enum Type {
-    INCOME("Доход"),
-    EXPENSE("Расход");
+public enum EntryType {
+    DEBIT("Дебет"),
+    CREDIT("Кредит");
 
     private final String description;
 
-    Type(String description) {
+    EntryType(String description) {
         this.description = description;
     }
 

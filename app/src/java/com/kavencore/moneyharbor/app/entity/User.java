@@ -46,7 +46,7 @@ public class User implements UserDetails {
 
     @OneToMany(mappedBy = "user")
     @Builder.Default
-    private List<Category> categories = new ArrayList<>();
+    private List<Transaction> transactions = new ArrayList<>();
 
     @CreationTimestamp
     private OffsetDateTime createdDate;
@@ -84,19 +84,19 @@ public class User implements UserDetails {
         }
     }
 
-    public void addCategory(Category category) {
-        if (category == null) return;
-        if (!this.equals(category.getUser())) {
-            this.categories.add(category);
-            category.setUser(this);
+    public void addTransaction(Transaction transaction) {
+        if (transaction == null) return;
+        if (!this.equals(transaction.getUser())) {
+            this.transactions.add(transaction);
+            transaction.setUser(this);
         }
     }
 
-    public void removeCategory(Category category) {
-        if (category == null) return;
-        if (this.categories.remove(category)) {
-            if (category.getUser() == this) {
-                category.setUser(null);
+    public void removeTransaction(Transaction transaction) {
+        if (transaction == null) return;
+        if (this.transactions.remove(transaction)) {
+            if (transaction.getUser() == this) {
+                transaction.setUser(null);
             }
         }
     }
