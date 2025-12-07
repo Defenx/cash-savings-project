@@ -2,22 +2,22 @@ package com.kavencore.moneyharbor.app.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.proxy.HibernateProxy;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.util.*;
 
 @Entity
-@Table(name = "accounts")
+@Table(name = "transactions")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(onlyExplicitlyIncluded = true)
-public class Account {
+public class Transaction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -25,36 +25,35 @@ public class Account {
     private UUID id;
 
     @ToString.Include
-    private String title;
+    private LocalDate date;
 
-    @Enumerated(EnumType.STRING)
     @ToString.Include
-    private Currency currency;
+    @CreationTimestamp
+    private OffsetDateTime createdDate;
 
-    @Enumerated(EnumType.STRING)
     @ToString.Include
-    private AccountType accountType;
+    private String description;
+
+    @OneToMany(mappedBy = "transaction")
+    @Builder.Default
+    List<Entry> entries = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private User user;
 
-    @OneToMany(mappedBy = "account")
-    @Builder.Default
-    List<Entry> entries = new ArrayList<>();
-
     public void addEntry(Entry entry) {
         if (entry == null) return;
-        if (!this.equals(entry.getAccount())) {
+        if (!this.equals(entry.getTransaction())) {
             this.entries.add(entry);
-            entry.setAccount(this);
+            entry.setTransaction(this);
         }
     }
 
     public void removeEntry(Entry entry) {
         if (entry == null) return;
         if (this.entries.remove(entry)) {
-            if (entry.getAccount() == this) {
-                entry.setAccount(null);
+            if (entry.getTransaction() == this) {
+                entry.setTransaction(null);
             }
         }
     }
@@ -66,8 +65,8 @@ public class Account {
         Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
         Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;
-        Account account = (Account) o;
-        return getId() != null && Objects.equals(getId(), account.getId());
+        Transaction transaction = (Transaction) o;
+        return getId() != null && Objects.equals(getId(), transaction.getId());
     }
 
     @Override

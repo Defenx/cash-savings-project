@@ -1,16 +1,3 @@
 databaseChangeLog:
-  - include: { file: 001-init-accounts.sql,
+  - include: { file: 001-init-tables.sql,
                relativeToChangelogFile: true }
-  - include: { file: 002-auth-and-fk.sql,
-               relativeToChangelogFile: true }
-  - include: { file: 003-init-operations.sql,
-               relativeToChangelogFile: true }
-  - include: { file: 004-init-category.sql,
-                 relativeToChangelogFile: true }
-  - include: { file: 005-update-operations-with-category.sql,
-               relativeToChangelogFile: true }
-  - include: { file: 006-update-accounts-constraint-title-currency.sql,
-               relativeToChangelogFile: true }
-
-
-

@@ -7,7 +7,7 @@ servers:
 tags:
   - name: Accounts
   - name: User
-  - name: Categories
+#  - name: Categories
 
 security:
   - BasicAuth: [ ]
@@ -170,36 +170,36 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/UserProfileResponse' }
 
-  /categories:
-    post:
-      tags: [ Categories ]
-      summary: Create category
-      description: |
-        Создаёт новую категорию. Требует аутентификации.
-        `user_id` проставляется автоматически из контекста.
-      operationId: createCategory
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: '#/components/schemas/CreateCategoryRequest' }
-      responses:
-        '201':
-          description: Created
-          headers:
-            Location:
-              description: URL созданной категории
-              schema: { type: string, format: uri }
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/CategoryResponse' }
-        '400':
-          description: Bad Request (RFC 9457 Problem Details)
-          content:
-            application/problem+json:
-              schema: { $ref: '#/components/schemas/ProblemDetails' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { $ref: '#/components/responses/Forbidden' }
+#  /categories:
+#    post:
+#      tags: [ Categories ]
+#      summary: Create category
+#      description: |
+#        Создаёт новую категорию. Требует аутентификации.
+#        `user_id` проставляется автоматически из контекста.
+#      operationId: createCategory
+#      requestBody:
+#        required: true
+#        content:
+#          application/json:
+#            schema: { $ref: '#/components/schemas/CreateCategoryRequest' }
+#      responses:
+#        '201':
+#          description: Created
+#          headers:
+#            Location:
+#              description: URL созданной категории
+#              schema: { type: string, format: uri }
+#          content:
+#            application/json:
+#              schema: { $ref: '#/components/schemas/CategoryResponse' }
+#        '400':
+#          description: Bad Request (RFC 9457 Problem Details)
+#          content:
+#            application/problem+json:
+#              schema: { $ref: '#/components/schemas/ProblemDetails' }
+#        '401': { $ref: '#/components/responses/Unauthorized' }
+#        '403': { $ref: '#/components/responses/Forbidden' }
 
 components:
   securitySchemes:
@@ -253,15 +253,15 @@ components:
           example: RUB_счет
         currency:
           $ref: '#/components/schemas/Currency'
-        amount:
-          type: number
-          x-java-type: java.math.BigDecimal
-          description: Денежная сумма; соответствует NUMERIC(19,2).
-          example: 0
+#        amount:
+#          type: number
+#          x-java-type: java.math.BigDecimal
+#          description: Денежная сумма; соответствует NUMERIC(19,2).
+#          example: 0
       example:
         title: RUB_счет
         currency: RUB
-        amount: 0
+#        amount: 0
 
 
     CreateAccountRequest:
@@ -276,36 +276,37 @@ components:
           example: null
         currency:
           $ref: '#/components/schemas/Currency'
-        amount:
-          type: number
-          x-java-type: java.math.BigDecimal
-          description: Денежная сумма; соответствует NUMERIC(19,2).
-          example: 0
-          multipleOf: 0.01
-          maximum: 100000000000000000
-          exclusiveMaximum: true
-          minimum: -100000000000000000
-          exclusiveMinimum: true
-          x-field-extra-annotation: |
-            @Digits(integer = 17, fraction = 2)
+#        amount:
+#          type: number
+#          x-java-type: java.math.BigDecimal
+#          description: Денежная сумма; соответствует NUMERIC(19,2).
+#          example: 0
+#          multipleOf: 0.01
+#          maximum: 100000000000000000
+#          exclusiveMaximum: true
+#          minimum: -100000000000000000
+#          exclusiveMinimum: true
+#          x-field-extra-annotation: |
+#            @Digits(integer = 17, fraction = 2)
       example:
         title: null
         currency: RUB
-        amount: 0
+#        amount: 0
 
     AccountResponse:
       type: object
-      required: [ title, currency, amount ]
+      required: [ title, currency ]
+#      required: [ title, currency, amount ]
       properties:
         title:
           type: string
         currency:
           $ref: '#/components/schemas/Currency'
-        amount:
-          type: number
-          x-java-type: java.math.BigDecimal
-          description: Денежная сумма; соответствует NUMERIC(19,2).
-          example: 1500.50
+#        amount:
+#          type: number
+#          x-java-type: java.math.BigDecimal
+#          description: Денежная сумма; соответствует NUMERIC(19,2).
+#          example: 1500.50
 
     ProblemDetails:
       type: object
@@ -379,35 +380,35 @@ components:
           type: string
           format: email
 
-    CreateCategoryRequest:
-      type: object
-      required: [ name, type ]
-      properties:
-        name:
-          type: string
-          description: Название категории
-          example: "Зарплата"
-        type:
-          type: string
-          enum: [ INCOME, EXPENSE ]
-          description: Тип категории
-          example: INCOME
-
-    CategoryResponse:
-      type: object
-      required: [ id, name, type ]
-      properties:
-        id:
-          type: string
-          format: uuid
-          description: Уникальный идентификатор категории
-          example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
-        name:
-          type: string
-          description: Название категории
-          example: "Зарплата"
-        type:
-          type: string
-          enum: [ INCOME, EXPENSE ]
-          description: Тип категории
-          example: INCOME
+#    CreateCategoryRequest:
+#      type: object
+#      required: [ name, type ]
+#      properties:
+#        name:
+#          type: string
+#          description: Название категории
+#          example: "Зарплата"
+#        type:
+#          type: string
+#          enum: [ INCOME, EXPENSE ]
+#          description: Тип категории
+#          example: INCOME
+#
+#    CategoryResponse:
+#      type: object
+#      required: [ id, name, type ]
+#      properties:
+#        id:
+#          type: string
+#          format: uuid
+#          description: Уникальный идентификатор категории
+#          example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+#        name:
+#          type: string
+#          description: Название категории
+#          example: "Зарплата"
+#        type:
+#          type: string
+#          enum: [ INCOME, EXPENSE ]
+#          description: Тип категории
+#          example: INCOME
